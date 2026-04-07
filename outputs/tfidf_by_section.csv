@@ -1,0 +1,151 @@
+section_label,term,tfidf_score
+environment,waste,0.41181622105660587
+environment,carbon,0.32859075583399483
+environment,emission,0.3048013798460133
+environment,metric ton,0.21931048542470136
+environment,ton,0.2032569331395265
+environment,metric,0.1769334839106126
+environment,recycling,0.17033824110656415
+environment,wastewater,0.14846593377148024
+environment,reclaim,0.12988290884375514
+environment,ghg,0.1192367687745949
+environment,water resource,0.11284908473309874
+environment,carbon reduction,0.10958199873609255
+environment,center,0.1085390279451657
+environment,equipment,0.10705219194591686
+environment,scope,0.10259168394817032
+environment,save,0.09813117595042378
+environment,electricity,0.09581526062244232
+environment,recycle,0.09190748281091632
+environment,treatment,0.08921015995493072
+environment,employee,0.08623648795643303
+environment,scrubber,0.08516912055328207
+environment,pollution,0.08474965195718417
+environment,energy save,0.07776787007077536
+environment,conservation,0.07731547196093995
+environment,air,0.07731547196093995
+environment,ghg emission,0.07239375247028977
+environment,acid,0.07069806370070487
+environment,saving,0.06813529644262566
+environment,generate,0.06690761996619804
+environment,equivalent,0.0654207839669492
+governance,director,0.30786457023911445
+governance,board,0.2985353408379292
+governance,committee,0.27521226733496595
+governance,tax,0.2550692285629357
+governance,risk management,0.20990766152666895
+governance,patent,0.19591381742489103
+governance,compensation,0.12127998221540873
+governance,compliance,0.12127998221540873
+governance,disclosure,0.1072861381136308
+governance,employee,0.1072861381136308
+governance,executive,0.09795690871244551
+governance,trade secret,0.0942647149036936
+governance,secret,0.0942647149036936
+governance,corporate governance,0.08862767931126023
+governance,regulation,0.08862767931126023
+governance,board director,0.08862767931126023
+governance,leadership,0.08862767931126023
+governance,ftp,0.0868396836572969
+governance,risk committee,0.0868396836572969
+governance,audit risk,0.0868396836572969
+governance,equipment,0.0746338352094823
+governance,ifrs,0.07347973232540506
+governance,law,0.07208478198517747
+governance,regulatory,0.06996922050888965
+governance,chip,0.06996922050888965
+governance,capability,0.06996922050888965
+governance,chairman,0.06996922050888965
+governance,shareholder,0.065304605808297
+governance,materiality,0.065304605808297
+governance,officer,0.065304605808297
+social,education,0.29250257949825514
+social,student,0.2702871937135775
+social,volunteer,0.2596803459603867
+social,art,0.21566672800099915
+social,science,0.16291282908763577
+social,charity,0.16285038644973404
+social,fab fab,0.1592102647901895
+social,cultural,0.1592102647901895
+social,donation,0.14846351690122822
+social,park,0.145244939265979
+social,education culture,0.12763949208222397
+social,culture foundation,0.12763949208222397
+social,employee,0.1258871861131731
+social,educational,0.11848205751828056
+social,care,0.1147794932208343
+social,community,0.10737436462594177
+social,charity foundation,0.10563268310253017
+social,chinese,0.10367180032849549
+social,committee,0.09996923603104922
+social,senior,0.09256410743615669
+social,association,0.09256410743615669
+social,event,0.09242859771471391
+social,science park,0.08802723591877515
+social,university,0.08515897884126415
+social,hsinchu,0.08515897884126415
+social,teacher,0.08483629537213042
+social,rural,0.0836258741228364
+social,elementary,0.08145641454381788
+social,japan,0.07922451232689763
+social,elementary school,0.07922451232689763
+supply_chain,raw,0.41403192585608556
+supply_chain,raw material,0.3584156970097457
+supply_chain,source,0.2595424012829193
+supply_chain,procurement,0.15426335880523967
+supply_chain,audits,0.14213036260731296
+supply_chain,mineral,0.14159180379531905
+supply_chain,material supplier,0.13595078162438629
+supply_chain,equipment,0.12977120064145964
+supply_chain,saq,0.12487986188995591
+supply_chain,significant supplier,0.12487986188995591
+supply_chain,substance,0.11741203867560634
+supply_chain,indirect raw,0.11504334058369674
+supply_chain,tier,0.1112324576926797
+supply_chain,part,0.11018811343231405
+supply_chain,indirect,0.10284223920349311
+supply_chain,tcia,0.10284223920349311
+supply_chain,capability,0.09887329572682639
+supply_chain,diligence,0.08815049074585123
+supply_chain,inspection,0.0865141337609731
+supply_chain,tier supplier,0.08033455277804644
+supply_chain,fire,0.08033455277804644
+supply_chain,responsible mineral,0.07964538963486696
+supply_chain,hazardous,0.07415497179511979
+supply_chain,mineral source,0.07079590189765952
+supply_chain,risk significant,0.07079590189765952
+supply_chain,hazardous substance,0.06797539081219314
+supply_chain,sustainable raw,0.06194641416045209
+supply_chain,major raw,0.06194641416045209
+supply_chain,maintenance,0.061795809829266496
+supply_chain,lab,0.058766993830567486
+talent,employee,0.7222748016759256
+talent,workplace,0.17371166116256437
+talent,student,0.16304515565258235
+talent,university,0.12952185262121027
+talent,occupational,0.11123641460409824
+talent,learn,0.10818884160124624
+talent,injury,0.10687117739805146
+talent,manager,0.1005699090941162
+talent,inclusive,0.1005699090941162
+talent,female,0.09599854958983821
+talent,education,0.08990340358413419
+talent,learning,0.0869460426289232
+talent,professional,0.07771311157272617
+talent,senior,0.07771311157272617
+talent,equipment,0.07618932507130016
+talent,family,0.07607778730030781
+talent,career,0.07245503552410268
+talent,capability,0.06857039256417015
+talent,patent,0.06552281956131814
+talent,hour,0.06399903305989214
+talent,occupational safety,0.06328214969213868
+talent,inclusive workplace,0.059427673555614124
+talent,growth,0.059427673555614124
+talent,center,0.05790388705418813
+talent,promotion,0.05615265253117957
+talent,high school,0.05485631405133612
+talent,japan,0.05434127664307701
+talent,director,0.05333252754991011
+talent,care,0.05333252754991011
+talent,turnover,0.05237143422797683
