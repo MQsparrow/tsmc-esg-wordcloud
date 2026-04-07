@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+env/
+venv/
+.venv/
+conda-env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/
+
+# Data (避免上傳大檔)
+data/raw/
+data/processed/
+
+# Outputs
+outputs/figures/
+outputs/models/
+
+# Logs
+*.log
+
+# VSCode
+.vscode/
