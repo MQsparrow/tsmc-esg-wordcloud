@@ -14,6 +14,7 @@ Using text mining techniques, we transform unstructured report text into an inte
 * Differences between **action-oriented** and **people-centric** language
 * Term importance using **TF-IDF**
 * Cross-domain keyword relationships
+* Universal language using **UN SDGs goal** to map and dig out problems int company
 
 The final result is an interactive Streamlit dashboard for exploration and presentation.
 
@@ -33,6 +34,18 @@ The final result is an interactive Streamlit dashboard for exploration and prese
 
   * Action-Oriented language (e.g., reduce, improve, implement)
   * People-Centric language (e.g., employee, community, safety)
+
+* **SDGs analysis**
+
+  * SDG 3 – Good Health and Well-being
+  * SDG 4 – Quality Education
+  * SDG 6 – Clean Water and Sanitation
+  * SDG 7 – Affordable and Clean Energy
+  * SDG 8 – Decent Work and Economic Growth
+  * SDG 9 – Industry, Innovation and Infrastructure
+  * SDG 12 – Responsible Consumption and Production
+  * SDG 13 – Climate Action
+  * SDG 17 – Partnerships for the Goals
 
 * **Visualizations**
 
@@ -115,6 +128,7 @@ We compute TF-IDF:
 
 * Per section (ESG domains)
 * Per orientation (action vs people)
+* Per SDGs (UN SDGs goals)
 
 ---
 
