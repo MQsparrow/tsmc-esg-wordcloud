@@ -24,7 +24,15 @@ CUSTOM_STOPWORDS = {
     
     "content", "overview", "index", "summary",
     "information", "data", "global", "group",
-    "value", "business", "operation"
+    "value", "business", "operation",
+
+    # generic corporate / noise terms
+    "secret", "manager", "opera", "chairperson", "engineer",
+    "wet", "nature", "ton", "metric ton", "scrubber",
+
+    # contact / address noise from PDF appendix
+    "tel", "fax", "hsinchu", "science park", "eda", "iw",
+    "currently serve", "currently serves",
 }
 
 # 可依你們資料再加
@@ -74,7 +82,120 @@ PEOPLE_WORDS = {
     "engagement", "human", "rights"
 }
 
+# I added SDG keywords based on UN targets, GRI standards, and SASB topics. 
+SDG_KEYWORDS = {
+
+    "SDG3_health": [
+        # UN target: ensure healthy lives, promote well-being
+        # GRI: Occupational Health and Safety (GRI 403)
+        # SASB: Employee Health & Safety
+        "health", "safety", "occupational", "injury", "illness", "disease",
+        "mental health", "wellbeing", "well-being", "medical", "ergonomic",
+        "accident", "incident rate", "lost time", "fatality", "hazard",
+        "health promotion", "employee assistance", "work-related",
+        "psychological safety", "stress", "burnout"
+    ],
+
+    "SDG4_education": [
+        # UN target: quality education, lifelong learning
+        # GRI: Training and Education (GRI 404)
+        # SASB: Workforce Development
+        "training", "education", "learning", "skill", "competency",
+        "upskilling", "reskilling", "career development", "scholarship",
+        "internship", "apprenticeship", "STEAM", "university", "academic",
+        "tuition", "e-learning", "knowledge transfer", "certification",
+        "professional development", "talent pipeline", "mentoring"
+    ],
+
+    "SDG6_water": [
+        # UN target: clean water, sanitation, water efficiency
+        # GRI: Water and Effluents (GRI 303)
+        # SASB: Water Management (semiconductor 高耗水產業重點)
+        "water", "wastewater", "effluent", "water recycling", "water reuse",
+        "water consumption", "water intensity", "water withdrawal",
+        "water stewardship", "water stress", "groundwater", "discharge",
+        "water treatment", "reclaimed water", "water reduction",
+        "water footprint", "water risk", "sanitation"
+    ],
+
+    "SDG7_energy": [
+        # UN target: affordable clean energy, energy efficiency, renewables
+        # GRI: Energy (GRI 302)
+        # SASB: Energy Management
+        "energy", "electricity", "renewable", "solar", "wind",
+        "energy consumption", "energy intensity", "energy efficiency",
+        "clean energy", "power purchase agreement", "PPA", "RE100",
+        "carbon free", "low carbon electricity", "energy reduction",
+        "kilowatt", "megawatt", "energy mix", "fossil fuel"
+    ],
+
+    "SDG8_labor": [
+        # UN target: decent work, economic growth, labor rights
+        # GRI: Employment (GRI 401), Forced Labor (GRI 409), Child Labor (GRI 408)
+        # SASB: Labor Practices
+        "decent work", "labor", "labour", "employment", "wage", "compensation",
+        "fair pay", "working hours", "overtime", "forced labor", "child labor",
+        "human rights", "freedom of association", "collective bargaining",
+        "worker", "workforce", "job creation", "economic growth",
+        "living wage", "pay equity", "gender pay gap", "labor standard",
+        "supply chain labor", "modern slavery"
+    ],
+
+    "SDG9_innovation": [
+        # UN target: industry, innovation, infrastructure, R&D
+        # GRI: (indirect, often reported as economic contribution)
+        # SASB: Intellectual Property, Process Innovation
+        "R&D", "patent", "trade secret",
+        "infrastructure",
+        "process node", "automation",
+        "digitalization", "artificial intelligence", "smart manufacturing",
+        "capital expenditure", "investment", "breakthrough", "prototype"
+    ],
+
+    "SDG12_consumption": [
+        # UN target: responsible consumption and production, waste, chemicals
+        # GRI: Waste (GRI 306), Materials (GRI 301), Supplier Environmental Assessment (GRI 308)
+        # SASB: Hazardous Waste, Supply Chain Management
+        "waste", "hazardous waste", "recycling", "circular economy",
+        "chemical", "substance", "material", "packaging",
+        "responsible sourcing", "supplier assessment", "procurement",
+        "product stewardship", "end of life", "reuse", "reduce",
+        "toxic", "restriction", "RoHS", "REACH", "chemical management",
+        "waste reduction", "zero waste", "resource efficiency"
+    ],
+
+    "SDG13_climate": [
+        # UN target: climate action, GHG reduction, resilience
+        # GRI: Emissions (GRI 305)
+        # SASB: GHG Emissions, Climate Risk
+        "climate", "climate change", "carbon", "emission", "greenhouse gas",
+        "GHG", "scope 1", "scope 2", "scope 3", "net zero", "carbon neutral",
+        "carbon reduction", "decarbonization", "carbon footprint",
+        "climate risk", "physical risk", "transition risk", "TCFD",
+        "Paris Agreement", "1.5 degree", "carbon offset", "carbon credit",
+        "climate resilience", "adaptation", "mitigation"
+    ],
+
+    "SDG17_partnership": [
+        # UN target: partnerships, multi-stakeholder, finance, data
+        # GRI: Stakeholder Engagement (GRI 2-29), Public Policy (GRI 415)
+        # SASB: (cross-cutting)
+        "partnership", "collaboration", "stakeholder", "engagement",
+        "multi-stakeholder", "public private", "industry association",
+        "coalition", "alliance", "initiative", "pledge", "commitment",
+        "transparency", "disclosure", "reporting framework", "GRI", "SASB",
+        "TCFD", "UN Global Compact", "standard", "certification",
+        "third party", "assurance", "audit", "accountability"
+    ],
+}
+
 ALLOWED_POS = {"NOUN", "PROPN", "ADJ", "VERB"}
+
+# Multi-word phrases to protect from stopword splitting.
+# They are joined with underscore before tokenization so they survive as one token.
+PROTECTED_PHRASES = [
+    "trade secret",
+]
 
 
 # =========================
@@ -88,6 +209,7 @@ class ChunkRecord:
     clean_text: str
     section_label: str
     orientation: str
+    sdg_labels: str
 
 
 # =========================
@@ -96,7 +218,6 @@ class ChunkRecord:
 
 
 def load_spacy_model(model_name: str = "en_core_web_sm"):
-    import spacy
     try:
         return spacy.load(model_name, disable=["parser"])
     except OSError:
@@ -154,6 +275,22 @@ def remove_page_artifacts(text: str) -> str:
 
         # 很短且像 header/footer
         if len(s) < 5 and re.search(r"\d", s):
+            continue
+
+        # contact info: Tel / Fax lines
+        if re.match(r"(tel|fax|phone)[\.\:\s\+]", s, re.IGNORECASE):
+            continue
+
+        # phone number patterns (+886, international)
+        if re.search(r"\+?\d[\d\s\-]{7,}", s) and len(s.split()) <= 8:
+            continue
+
+        # address lines: Science Park / Rd. / No. / zip code patterns
+        if re.search(r"\bscience park\b|\brd\.\b|\bno\.\s*\d|\b\d{5,6}\b", s, re.IGNORECASE):
+            continue
+
+        # product codes / model numbers (e.g. EM9305, IW612)
+        if re.fullmatch(r"[A-Z]{1,3}\d{3,}[\w\-]*", s):
             continue
 
         cleaned.append(line)
@@ -216,8 +353,10 @@ def count_keyword_hits(text: str, keywords: List[str]) -> int:
     text_lower = text.lower()
     score = 0
     for kw in keywords:
-        # keyword phrase matching
-        if kw in text_lower:
+        kw_lower = kw.lower()
+        # use word boundary matching to avoid substring false positives (e.g. "ai" in "Taiwan")
+        pattern = r"\b" + re.escape(kw_lower) + r"\b"
+        if re.search(pattern, text_lower):
             score += 1
     return score
 
@@ -253,6 +392,25 @@ def classify_orientation(tokens):
     else:
         return "mixed"
 
+# Use global SDG_KEYWORDS to classify text into relevant SDGs.
+def get_sdg_scores(text: str) -> Dict[str, int]:
+    return {
+        sdg: count_keyword_hits(text, kws)
+        for sdg, kws in SDG_KEYWORDS.items()
+    }
+
+def classify_sdg(text: str, threshold: int = 2) -> List[str]:
+    scores = get_sdg_scores(text)
+    matched = [sdg for sdg, score in scores.items() if score >= threshold]
+    return matched if matched else ["unclassified"]
+
+
+def get_dominant_sdg(text: str) -> str:
+    scores = get_sdg_scores(text)
+    best = max(scores, key=scores.get)
+    if scores[best] == 0:
+        return "unclassified"
+    return best
 
 # =========================
 # 6. TOKENIZATION / LEMMATIZATION / POS FILTER
@@ -271,8 +429,12 @@ def preprocess_chunk(
     """
     text = text.lower()
 
+    # protect multi-word phrases by joining with underscore before tokenization
+    for phrase in PROTECTED_PHRASES:
+        text = re.sub(r"\b" + re.escape(phrase) + r"\b", phrase.replace(" ", "_"), text)
+
     # 保留字母與數字，其他大致清掉
-    text = re.sub(r"[^a-z0-9\s\-]", " ", text)
+    text = re.sub(r"[^a-z0-9\s\-_]", " ", text)
     text = re.sub(r"\s+", " ", text).strip()
 
     doc = nlp(text)
@@ -341,10 +503,16 @@ def extract_top_terms_per_group(
         .reset_index()
     )
 
+    # Adjust min_df if there are too few documents
+    num_docs = len(grouped)
+    if num_docs < min_df:
+        min_df = 1
+    max_df_val = 0.9 if num_docs > 1 else 1.0
+
     vectorizer = TfidfVectorizer(
         min_df=min_df,
         ngram_range=ngram_range,
-        max_df=0.9
+        max_df=max_df_val
     )
     X = vectorizer.fit_transform(grouped[text_col])
     vocab = vectorizer.get_feature_names_out()
@@ -386,20 +554,21 @@ def run_pipeline(raw_text: str, nlp) -> pd.DataFrame:
         orientation = classify_orientation(kept_tokens)
         if len(clean_text.split()) < 20:
             continue
-        
+
         if "content" in clean_text and "index" in clean_text:
             continue
-        
+
         if "content" in chunk.lower() and "overview" in chunk.lower():
             continue
-        
+
         records.append(
             ChunkRecord(
                 chunk_id=i,
                 raw_text=chunk,
                 clean_text=clean_text,
                 section_label=section_label,
-                orientation=orientation
+                orientation=orientation,
+                sdg_labels=",".join(classify_sdg(chunk)),
             ).__dict__
         )
 
@@ -435,8 +604,21 @@ def save_outputs(
     )
     df_orientation_terms.to_csv(f"{output_dir}/tfidf_by_orientation.csv", index=False)
 
+    # top terms by SDG (explode multi-labels so each chunk contributes to all its SDGs)
+    df_exploded = (
+        df_chunks.assign(sdg_labels=df_chunks["sdg_labels"].str.split(","))
+        .explode("sdg_labels")
+    )
+    df_exploded["sdg_labels"] = df_exploded["sdg_labels"].str.strip()
+    df_exploded = df_exploded[df_exploded["sdg_labels"] != "unclassified"]
+    df_sdg_terms = extract_top_terms_per_group(
+        df_exploded, group_col="sdg_labels", top_k=30
+    )
+    df_sdg_terms.to_csv(f"{output_dir}/tfidf_by_sdg.csv", index=False)
+
     return {
         "chunks": df_chunks,
         "section_terms": df_section_terms,
-        "orientation_terms": df_orientation_terms
+        "orientation_terms": df_orientation_terms,
+        "sdg_terms": df_sdg_terms,
     }

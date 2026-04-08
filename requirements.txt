@@ -3,3 +3,9 @@ pandas
 matplotlib
 wordcloud
 plotly
+spacy
+scikit-learn
+pdfplumber
+beautifulsoup4
+requests
+nltk

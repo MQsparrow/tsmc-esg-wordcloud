@@ -31,6 +31,7 @@ OUTPUT_DIR = BASE_DIR / "outputs"
 CHUNKS_PATH = OUTPUT_DIR / "chunks_processed.csv"
 SECTION_TFIDF_PATH = OUTPUT_DIR / "tfidf_by_section.csv"
 ORIENTATION_TFIDF_PATH = OUTPUT_DIR / "tfidf_by_orientation.csv"
+SDG_TFIDF_PATH = OUTPUT_DIR / "tfidf_by_sdg.csv"
 
 
 # =========================
@@ -38,6 +39,7 @@ ORIENTATION_TFIDF_PATH = OUTPUT_DIR / "tfidf_by_orientation.csv"
 # =========================
 SECTION_ORDER = ["environment", "talent", "supply_chain", "social", "governance"]
 ORIENTATION_ORDER = ["action_oriented", "people_centric", "mixed"]
+SDG_ORDER = ["SDG3_health", "SDG4_education", "SDG6_water", "SDG7_energy", "SDG8_labor", "SDG9_innovation", "SDG12_consumption", "SDG13_climate", "SDG17_partnership"]
 
 SECTION_LABEL_MAP = {
     "environment": "Environment",
@@ -53,6 +55,72 @@ ORIENTATION_LABEL_MAP = {
     "mixed": "Mixed",
 }
 
+SDG_LABEL_MAP = {
+    "SDG3_health": "SDG 3: Health",
+    "SDG4_education": "SDG 4: Education",
+    "SDG6_water": "SDG 6: Water",
+    "SDG7_energy": "SDG 7: Energy",
+    "SDG8_labor": "SDG 8: Labor",
+    "SDG9_innovation": "SDG 9: Innovation",
+    "SDG12_consumption": "SDG 12: Consumption",
+    "SDG13_climate": "SDG 13: Climate",
+    "SDG17_partnership": "SDG 17: Partnership",
+}
+
+SDG_NARRATIVE = {
+    "SDG17_partnership": (
+        "**Partnership dominates because it has to.**\n\n"
+        "SDG 17 has the highest chunk count and its top terms are *committee, carbon reduction, chemical* — "
+        "this isn't goodwill language, it's compliance infrastructure. TSMC is building governance structures "
+        "to push Scope 3 emissions and chemical accountability down to suppliers, driven by CSRD exposure "
+        "from the Dresden fab."
+    ),
+    "SDG4_education": (
+        "**Education coverage is inflated.**\n\n"
+        "SDG 4 ranks highly but top terms *learning, senior, care* suggest significant overlap with talent "
+        "retention and social welfare content. The keyword boundary is leaking — not all of these chunks "
+        "are genuinely about education."
+    ),
+    "SDG12_consumption": (
+        "**Consumption reflects manufacturing reality.**\n\n"
+        "Top terms *chemical, recycle, acid* point to TSMC's fab-level material management: "
+        "acid recovery, chemical reuse loops, and hazardous waste reduction — core to responsible "
+        "semiconductor production at scale."
+    ),
+    "SDG13_climate": (
+        "**Climate is the backbone of ESG reporting.**\n\n"
+        "Top terms *carbon reduction, equivalent, electricity* reflect TSMC's RE100 commitment and "
+        "Scope 2 decarbonization strategy. The high chunk count signals that climate disclosure "
+        "is embedded across sections, not siloed."
+    ),
+    "SDG8_labor": (
+        "**Labor language is precise and formal.**\n\n"
+        "Top terms *permanent employee, intern, recruitment* indicate structured HR reporting. "
+        "Coverage is driven by headcount disclosures and employment contract data, not narrative."
+    ),
+    "SDG9_innovation": (
+        "**Innovation is IP-driven.**\n\n"
+        "Top terms *patent, trade secret, patent application* show that TSMC frames innovation "
+        "through intellectual property — not just R&D spend. This reflects a defensive IP strategy "
+        "alongside process node advancement."
+    ),
+    "SDG3_health": (
+        "**Health focus is safety-led.**\n\n"
+        "Top terms *safety health, chemical, injury* indicate occupational health dominates over "
+        "community health. Chemical exposure and injury prevention are the primary concerns in a fab environment."
+    ),
+    "SDG6_water": (
+        "**Water and chemical management are intertwined.**\n\n"
+        "Top terms *chemical, indicator, acid* reflect that water reporting in semiconductor fabs "
+        "is inseparable from chemical discharge management — acidic wastewater treatment is the core challenge."
+    ),
+    "SDG7_energy": (
+        "**Energy reporting centers on carbon.**\n\n"
+        "Top terms *carbon reduction, electricity, charity* show decarbonization of electricity "
+        "consumption is the primary energy narrative, aligned with TSMC's RE100 and net-zero targets."
+    ),
+}
+
 
 # =========================
 # Load data
@@ -62,15 +130,16 @@ def load_data():
     df_chunks = pd.read_csv(CHUNKS_PATH)
     df_section = pd.read_csv(SECTION_TFIDF_PATH)
     df_orientation = pd.read_csv(ORIENTATION_TFIDF_PATH)
+    df_sdg = pd.read_csv(SDG_TFIDF_PATH)
 
-    for col in ["raw_text", "clean_text", "section_label", "orientation"]:
+    for col in ["raw_text", "clean_text", "section_label", "orientation", "sdg_labels"]:
         if col in df_chunks.columns:
             df_chunks[col] = df_chunks[col].fillna("").astype(str)
 
-    return df_chunks, df_section, df_orientation
+    return df_chunks, df_section, df_orientation, df_sdg
 
 
-df_chunks, df_section_tfidf, df_orientation_tfidf = load_data()
+df_chunks, df_section_tfidf, df_orientation_tfidf, df_sdg_tfidf = load_data()
 
 
 # =========================
@@ -81,6 +150,8 @@ def prettify_label(x: str) -> str:
         return SECTION_LABEL_MAP[x]
     if x in ORIENTATION_LABEL_MAP:
         return ORIENTATION_LABEL_MAP[x]
+    if x in SDG_LABEL_MAP:
+        return SDG_LABEL_MAP[x]
     return x.replace("_", " ").title()
 
 
@@ -149,9 +220,10 @@ def render_chunk_cards(df: pd.DataFrame, max_chunks: int = 5):
     for i, (_, row) in enumerate(view_df.head(max_chunks).iterrows(), start=1):
         label_section = prettify_label(row["section_label"])
         label_orientation = prettify_label(row["orientation"])
+        label_SDGs = ", ".join([prettify_label(s.strip()) for s in row.get("sdg_labels", "").split(",") if s.strip() and s.strip() != "unclassified"])
 
         with st.expander(
-            f"Chunk {i} | {label_section} | {label_orientation}",
+            f"Chunk {i} | {label_section} | {label_orientation} | {label_SDGs}",
             expanded=False
         ):
             st.write(row["raw_text"])
@@ -230,14 +302,15 @@ def plot_distribution_bar(df: pd.DataFrame, col: str, title: str):
     st.plotly_chart(fig, use_container_width=True)
 
 
+_SDG9_EXCLUSIVE_TERMS = {"trade_secret", "trade_secret registration", "patent application", "patent"}
+
 def get_top_insight(df_terms: pd.DataFrame, label_col: str, top_k: int = 3):
     insights = []
     for label in df_terms[label_col].unique():
-        sub = (
-            df_terms[df_terms[label_col] == label]
-            .sort_values("tfidf_score", ascending=False)
-            .head(top_k)
-        )
+        sub = df_terms[df_terms[label_col] == label].sort_values("tfidf_score", ascending=False)
+        if label_col == "sdg_labels" and label != "SDG9_innovation":
+            sub = sub[~sub["term"].isin(_SDG9_EXCLUSIVE_TERMS)]
+        sub = sub.head(top_k)
         terms = ", ".join(sub["term"].tolist())
         insights.append((prettify_label(label), terms))
     return insights
@@ -255,8 +328,9 @@ def render_hero_summary():
 
     sec_insights = get_top_insight(df_section_tfidf, "section_label", top_k=3)
     ori_insights = get_top_insight(df_orientation_tfidf, "orientation", top_k=3)
+    SDG_insights = get_top_insight(df_sdg_tfidf, "sdg_labels", top_k=3)
 
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
 
     with col1:
         st.markdown("**Section highlights**")
@@ -266,6 +340,11 @@ def render_hero_summary():
     with col2:
         st.markdown("**Orientation highlights**")
         for name, terms in ori_insights:
+            st.markdown(f"- **{name}**: {terms}")
+
+    with col3:
+        st.markdown("**SDG highlights**")
+        for name, terms in SDG_insights:
             st.markdown(f"- **{name}**: {terms}")
 
 
@@ -289,7 +368,7 @@ page_mode = st.sidebar.selectbox(
 
 view_mode = st.sidebar.radio(
     "Explorer mode",
-    ["Section view", "Orientation view"]
+    ["Section view", "Orientation view", "SDG view"]
 )
 
 top_k = st.sidebar.slider("Top keywords", min_value=10, max_value=30, value=15, step=5)
@@ -309,11 +388,12 @@ if page_mode == "Overview":
     render_hero_summary()
     st.markdown("")
 
-    c1, c2, c3, c4 = st.columns(4)
+    c1, c2, c3, c4, c5 = st.columns(5)
     c1.metric("Total Chunks", len(df_chunks))
     c2.metric("Sections", df_chunks["section_label"].nunique())
     c3.metric("Orientations", df_chunks["orientation"].nunique())
-    c4.metric("Filtered Chunks", len(filtered_chunks))
+    c4.metric("SDG Themes", df_chunks["sdg_labels"].str.split(",").explode().str.strip().pipe(lambda s: s[s != "unclassified"]).nunique())
+    c5.metric("Filtered Chunks", len(filtered_chunks))
 
     st.markdown("### Quick Insights")
 
@@ -347,6 +427,30 @@ if page_mode == "Overview":
     with insight_col3:
         st.info("**Action-oriented focus**  \n" + ", ".join(top_action))
 
+    # Top 2 SDGs by chunk count
+    sdg_counts = (
+        df_chunks["sdg_labels"].str.split(",").explode().str.strip()
+        .loc[lambda s: s != "unclassified"]
+        .value_counts()
+    )
+    top2_sdgs = sdg_counts.head(2).index.tolist()
+
+    sdg_focus_col1, sdg_focus_col2 = st.columns(2)
+    for col, sdg in zip([sdg_focus_col1, sdg_focus_col2], top2_sdgs):
+        top_terms = (
+            df_sdg_tfidf[df_sdg_tfidf["sdg_labels"] == sdg]
+            .sort_values("tfidf_score", ascending=False)
+            .head(3)["term"]
+            .tolist()
+        )
+        label = SDG_LABEL_MAP.get(sdg, sdg)
+        count = int(sdg_counts.get(sdg, 0))
+        narrative = SDG_NARRATIVE.get(sdg, "")
+        with col:
+            with st.expander(f"**{label} focus** — {', '.join(top_terms)} ({count} chunks)"):
+                if narrative:
+                    st.markdown(narrative)
+
     row1_col1, row1_col2 = st.columns(2)
 
     with row1_col1:
@@ -354,6 +458,14 @@ if page_mode == "Overview":
 
     with row1_col2:
         plot_distribution_bar(df_chunks, "orientation", "Orientation Distribution")
+
+    df_chunks_sdg_exploded = (
+        df_chunks.assign(sdg_labels=df_chunks["sdg_labels"].str.split(","))
+        .explode("sdg_labels")
+        .assign(sdg_labels=lambda d: d["sdg_labels"].str.strip())
+        .loc[lambda d: d["sdg_labels"] != "unclassified"]
+    )
+    plot_distribution_bar(df_chunks_sdg_exploded, "sdg_labels", "SDG Distribution")
 
     st.markdown("### Cross-Section Theme Overlap")
     heatmap_section = build_overlap_heatmap(
@@ -372,6 +484,15 @@ if page_mode == "Overview":
         top_n=20
     )
     plot_heatmap(heatmap_orientation, "Top-Term Overlap Across Narrative Orientations")
+
+    st.markdown("### Cross-SDG Theme Overlap")
+    heatmap_sdg = build_overlap_heatmap(
+        df_sdg_tfidf,
+        group_col="sdg_labels",
+        ordered_groups=SDG_ORDER,
+        top_n=20
+    )
+    plot_heatmap(heatmap_sdg, "Top-Term Overlap Across SDGs")
 
 
 # =========================
@@ -430,7 +551,7 @@ else:
                     else:
                         render_chunk_cards(df_chunk_section, max_chunks=max_chunks)
 
-    else:
+    elif view_mode == "Orientation view":
         tabs = st.tabs([ORIENTATION_LABEL_MAP.get(x, x) for x in ORIENTATION_ORDER])
 
         for tab, orientation in zip(tabs, ORIENTATION_ORDER):
@@ -472,6 +593,49 @@ else:
                         st.info("No chunks match the current filter.")
                     else:
                         render_chunk_cards(df_chunk_ori, max_chunks=max_chunks)
+
+    else:  # SDG view
+        tabs = st.tabs([SDG_LABEL_MAP.get(x, x) for x in SDG_ORDER])
+
+        for tab, sdg in zip(tabs, SDG_ORDER):
+            with tab:
+                df_terms = df_sdg_tfidf[df_sdg_tfidf["sdg_labels"] == sdg].copy()
+                df_chunk_sdg = filtered_chunks[filtered_chunks["sdg_labels"].str.contains(sdg, na=False)].copy()
+
+                count_sdg = df_chunks["sdg_labels"].str.contains(sdg, na=False).sum()
+                st.subheader(f"{SDG_LABEL_MAP.get(sdg, sdg)} Analysis ({count_sdg} chunks)")
+
+                left, right = st.columns([1.2, 1])
+
+                with left:
+                    st.markdown("**Word Cloud**")
+                    wc = make_wordcloud_from_tfidf(df_terms.head(80))
+                    if wc:
+                        plot_wordcloud(wc)
+                    else:
+                        st.info("No terms available.")
+
+                with right:
+                    st.markdown("**Top Keywords**")
+                    plot_top_terms(
+                        df_terms,
+                        title=f"Top TF-IDF Terms: {SDG_LABEL_MAP.get(sdg, sdg)}",
+                        top_k=top_k
+                    )
+
+                st.markdown("**Top Keywords Table**")
+                st.dataframe(
+                    get_top_terms_table(df_terms, top_k=top_k),
+                    use_container_width=True,
+                    hide_index=True
+                )
+
+                if show_chunks:
+                    st.markdown("**Representative Chunks**")
+                    if len(df_chunk_sdg) == 0:
+                        st.info("No chunks match the current filter.")
+                    else:
+                        render_chunk_cards(df_chunk_sdg, max_chunks=max_chunks)
 
 
 # =========================

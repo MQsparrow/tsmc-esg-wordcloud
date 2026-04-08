@@ -25,6 +25,9 @@ def main():
     print("\n=== Orientation distribution ===")
     print(df_chunks["orientation"].value_counts())
 
+    print("\n=== SDG distribution (multi-label, exploded) ===")
+    print(df_chunks["sdg_labels"].str.split(",").explode().str.strip().value_counts())
+
     print("\n=== Empty-ish clean text count (<5 words) ===")
     print((df_chunks["clean_text"].str.split().str.len() < 5).sum())
 
@@ -44,6 +47,16 @@ def main():
         print(
             outputs["orientation_terms"]
             .loc[outputs["orientation_terms"]["orientation"] == ori, ["term", "tfidf_score"]]
+            .head(10)
+            .to_string(index=False)
+        )
+
+    print("\n=== Top SDG terms ===")
+    for sdg in outputs["sdg_terms"]["sdg_labels"].unique():
+        print(f"\n[{sdg}]")
+        print(
+            outputs["sdg_terms"]
+            .loc[outputs["sdg_terms"]["sdg_labels"] == sdg, ["term", "tfidf_score"]]
             .head(10)
             .to_string(index=False)
         )
