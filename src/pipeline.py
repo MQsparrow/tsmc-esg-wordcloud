@@ -61,6 +61,34 @@ ROLE_KEYWORDS = {
     ]
 }
 
+ISSUE_FRAME_KEYWORDS = {
+    "environment": [
+        "climate", "carbon", "emission", "energy", "electricity", "renewable",
+        "water", "waste", "recycling", "pollution", "wastewater", "resource",
+        "conservation", "environment", "greenhouse", "decarbonization"
+    ],
+    "labor_talent": [
+        "employee", "employees", "talent", "training", "learning", "career",
+        "workplace", "safety", "health", "well-being", "wellbeing", "diversity",
+        "inclusion", "human rights", "worker", "workers", "workforce", "recruitment"
+    ],
+    "supply_chain": [
+        "supplier", "suppliers", "procurement", "supply chain", "vendor",
+        "responsible sourcing", "audit", "compliance", "raw material", "material risk",
+        "third party", "contractor"
+    ],
+    "innovation": [
+        "patent", "trade secret", "intellectual property", "research", "development",
+        "technology", "innovation", "process node", "automation", "digitalization",
+        "artificial intelligence", "smart manufacturing", "breakthrough", "prototype"
+    ],
+    "governance_risk": [
+        "governance", "board", "ethics", "integrity", "compliance", "risk",
+        "policy", "management", "oversight", "internal control", "tax",
+        "committee", "security", "regulation", "accountability"
+    ],
+}
+
 ACTION_WORDS = {
     "reduce", "improve", "enhance", "increase", "develop", "promote", "strengthen",
     "implement", "build", "support", "advance", "drive", "optimize", "expand",
@@ -213,6 +241,8 @@ class ChunkRecord:
     orientation: str
     sdg_labels: str
     sdg_confidence: float
+    issue_frame: str
+    issue_frame_confidence: float
 
 
 # =========================
@@ -503,6 +533,26 @@ def classify_orientation(tokens):
     else:
         return "mixed"
 
+
+def get_issue_frame_scores(text: str) -> Dict[str, int]:
+    return {
+        issue_frame: count_keyword_hits(text, keywords)
+        for issue_frame, keywords in ISSUE_FRAME_KEYWORDS.items()
+    }
+
+
+def classify_issue_frame(text: str, threshold: int = 2) -> Tuple[str, float]:
+    scores = get_issue_frame_scores(text)
+    ranked = sorted(scores.items(), key=lambda item: item[1], reverse=True)
+
+    if not ranked or ranked[0][1] < threshold:
+        return "other", 0.0
+
+    top_frame, top_score = ranked[0]
+    total_signal = sum(score for _, score in ranked if score > 0)
+    confidence = top_score / total_signal if total_signal else 0.0
+    return top_frame, round(confidence, 4)
+
 # Use global SDG_KEYWORDS to classify text into relevant SDGs.
 def get_sdg_scores(text: str) -> Dict[str, int]:
     return {
@@ -704,6 +754,27 @@ def build_cosine_similarity_by_group(
     )
 
 
+def build_issue_frame_distribution(
+    df: pd.DataFrame,
+    group_col: str | None = None,
+    issue_col: str = "issue_frame",
+) -> pd.DataFrame:
+    if group_col is None:
+        summary = df[issue_col].value_counts().reset_index()
+        summary.columns = [issue_col, "count"]
+        summary["share"] = (summary["count"] / summary["count"].sum()).round(4)
+        return summary
+
+    summary = (
+        df.groupby([group_col, issue_col])
+        .size()
+        .reset_index(name="count")
+    )
+    group_totals = summary.groupby(group_col)["count"].transform("sum")
+    summary["share"] = (summary["count"] / group_totals).round(4)
+    return summary
+
+
 # =========================
 # 8. FULL PIPELINE
 # =========================
@@ -723,6 +794,7 @@ def run_pipeline(raw_text: str, nlp) -> pd.DataFrame:
         clean_text, kept_tokens = preprocess_chunk(chunk, nlp)
         orientation = classify_orientation(kept_tokens)
         sdg_labels, sdg_confidence = classify_sdg(chunk)
+        issue_frame, issue_frame_confidence = classify_issue_frame(chunk)
         if len(clean_text.split()) < 20:
             continue
 
@@ -741,6 +813,8 @@ def run_pipeline(raw_text: str, nlp) -> pd.DataFrame:
                 orientation=orientation,
                 sdg_labels=",".join(sdg_labels),
                 sdg_confidence=sdg_confidence,
+                issue_frame=issue_frame,
+                issue_frame_confidence=issue_frame_confidence,
             ).__dict__
         )
 
@@ -775,6 +849,10 @@ def save_outputs(
         df_chunks, group_col="orientation", top_k=30
     )
     df_orientation_terms.to_csv(output_path / "tfidf_by_orientation.csv", index=False)
+    df_issue_frame_terms = extract_top_terms_per_group(
+        df_chunks, group_col="issue_frame", top_k=30
+    )
+    df_issue_frame_terms.to_csv(output_path / "tfidf_by_issue_frame.csv", index=False)
     similarity_section = build_cosine_similarity_by_group(df_chunks, group_col="section_label")
     similarity_section.to_csv(output_path / "similarity_by_section.csv", index=True)
     similarity_orientation = build_cosine_similarity_by_group(df_chunks, group_col="orientation")
@@ -793,13 +871,20 @@ def save_outputs(
     df_sdg_terms.to_csv(output_path / "tfidf_by_sdg.csv", index=False)
     similarity_sdg = build_cosine_similarity_by_group(df_exploded, group_col="sdg_labels")
     similarity_sdg.to_csv(output_path / "similarity_by_sdg.csv", index=True)
+    issue_frame_distribution = build_issue_frame_distribution(df_chunks)
+    issue_frame_distribution.to_csv(output_path / "issue_frame_distribution.csv", index=False)
+    issue_frame_by_section = build_issue_frame_distribution(df_chunks, group_col="section_label")
+    issue_frame_by_section.to_csv(output_path / "issue_frame_by_section.csv", index=False)
 
     return {
         "chunks": df_chunks,
         "section_terms": df_section_terms,
         "orientation_terms": df_orientation_terms,
         "sdg_terms": df_sdg_terms,
+        "issue_frame_terms": df_issue_frame_terms,
         "section_similarity": similarity_section,
         "orientation_similarity": similarity_orientation,
         "sdg_similarity": similarity_sdg,
+        "issue_frame_distribution": issue_frame_distribution,
+        "issue_frame_by_section": issue_frame_by_section,
     }

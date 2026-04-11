@@ -54,6 +54,7 @@ def main(run_audit: bool = False):
     print_top_terms(outputs["section_terms"], "section_label", "section")
     print_top_terms(outputs["orientation_terms"], "orientation", "orientation")
     print_top_terms(outputs["sdg_terms"], "sdg_labels", "SDG")
+    print_top_terms(outputs["issue_frame_terms"], "issue_frame", "issue frame")
 
     if run_audit:
         print("\n=== Phase 1 Audit ===")

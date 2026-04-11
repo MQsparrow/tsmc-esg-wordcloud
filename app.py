@@ -32,9 +32,12 @@ CHUNKS_PATH = OUTPUT_DIR / "chunks_processed.csv"
 SECTION_TFIDF_PATH = OUTPUT_DIR / "tfidf_by_section.csv"
 ORIENTATION_TFIDF_PATH = OUTPUT_DIR / "tfidf_by_orientation.csv"
 SDG_TFIDF_PATH = OUTPUT_DIR / "tfidf_by_sdg.csv"
+ISSUE_FRAME_TFIDF_PATH = OUTPUT_DIR / "tfidf_by_issue_frame.csv"
 SECTION_SIMILARITY_PATH = OUTPUT_DIR / "similarity_by_section.csv"
 ORIENTATION_SIMILARITY_PATH = OUTPUT_DIR / "similarity_by_orientation.csv"
 SDG_SIMILARITY_PATH = OUTPUT_DIR / "similarity_by_sdg.csv"
+ISSUE_FRAME_DISTRIBUTION_PATH = OUTPUT_DIR / "issue_frame_distribution.csv"
+ISSUE_FRAME_BY_SECTION_PATH = OUTPUT_DIR / "issue_frame_by_section.csv"
 
 
 # =========================
@@ -43,6 +46,7 @@ SDG_SIMILARITY_PATH = OUTPUT_DIR / "similarity_by_sdg.csv"
 SECTION_ORDER = ["environment", "talent", "supply_chain", "social", "governance"]
 ORIENTATION_ORDER = ["action_oriented", "people_centric", "mixed"]
 SDG_ORDER = ["SDG3_health", "SDG4_education", "SDG6_water", "SDG7_energy", "SDG8_labor", "SDG9_innovation", "SDG12_consumption", "SDG13_climate", "SDG17_partnership"]
+ISSUE_FRAME_ORDER = ["environment", "labor_talent", "supply_chain", "innovation", "governance_risk", "other"]
 
 SECTION_LABEL_MAP = {
     "environment": "Environment",
@@ -68,6 +72,15 @@ SDG_LABEL_MAP = {
     "SDG12_consumption": "SDG 12: Consumption",
     "SDG13_climate": "SDG 13: Climate",
     "SDG17_partnership": "SDG 17: Partnership",
+}
+
+ISSUE_FRAME_LABEL_MAP = {
+    "environment": "Environment",
+    "labor_talent": "Labor / Talent",
+    "supply_chain": "Supply Chain",
+    "innovation": "Innovation",
+    "governance_risk": "Governance / Risk",
+    "other": "Other",
 }
 
 SDG_NARRATIVE = {
@@ -138,6 +151,15 @@ ORIENTATION_NARRATIVE = {
     "mixed": "Mixed chunks combine implementation language with stakeholder or workforce language, often in cross-functional reporting sections.",
 }
 
+ISSUE_FRAME_NARRATIVE = {
+    "environment": "This issue frame captures resource, emissions, water, and waste language that reflects the operational footprint of semiconductor production.",
+    "labor_talent": "This issue frame captures workforce, safety, development, and human-rights language around employees and labor conditions.",
+    "supply_chain": "This issue frame captures supplier oversight, procurement controls, audits, and third-party compliance language.",
+    "innovation": "This issue frame captures patents, R&D, process technology, and other language about technical leadership and innovation capability.",
+    "governance_risk": "This issue frame captures risk, board oversight, policy, tax, security, and accountability language.",
+    "other": "This issue frame groups chunks with weak or mixed signals that do not clearly fit one of the main issue categories.",
+}
+
 
 # =========================
 # Load data
@@ -148,24 +170,32 @@ def load_data():
     df_section = pd.read_csv(SECTION_TFIDF_PATH)
     df_orientation = pd.read_csv(ORIENTATION_TFIDF_PATH)
     df_sdg = pd.read_csv(SDG_TFIDF_PATH)
+    df_issue_frame = pd.read_csv(ISSUE_FRAME_TFIDF_PATH)
     df_section_similarity = pd.read_csv(SECTION_SIMILARITY_PATH, index_col=0)
     df_orientation_similarity = pd.read_csv(ORIENTATION_SIMILARITY_PATH, index_col=0)
     df_sdg_similarity = pd.read_csv(SDG_SIMILARITY_PATH, index_col=0)
+    df_issue_frame_distribution = pd.read_csv(ISSUE_FRAME_DISTRIBUTION_PATH)
+    df_issue_frame_by_section = pd.read_csv(ISSUE_FRAME_BY_SECTION_PATH)
 
-    for col in ["raw_text", "clean_text", "section_label", "orientation", "sdg_labels"]:
+    for col in ["raw_text", "clean_text", "section_label", "orientation", "sdg_labels", "issue_frame"]:
         if col in df_chunks.columns:
             df_chunks[col] = df_chunks[col].fillna("").astype(str)
     if "sdg_confidence" in df_chunks.columns:
         df_chunks["sdg_confidence"] = pd.to_numeric(df_chunks["sdg_confidence"], errors="coerce").fillna(0.0)
+    if "issue_frame_confidence" in df_chunks.columns:
+        df_chunks["issue_frame_confidence"] = pd.to_numeric(df_chunks["issue_frame_confidence"], errors="coerce").fillna(0.0)
 
     return (
         df_chunks,
         df_section,
         df_orientation,
         df_sdg,
+        df_issue_frame,
         df_section_similarity,
         df_orientation_similarity,
         df_sdg_similarity,
+        df_issue_frame_distribution,
+        df_issue_frame_by_section,
     )
 
 
@@ -174,9 +204,12 @@ def load_data():
     df_section_tfidf,
     df_orientation_tfidf,
     df_sdg_tfidf,
+    df_issue_frame_tfidf,
     df_section_similarity,
     df_orientation_similarity,
     df_sdg_similarity,
+    df_issue_frame_distribution,
+    df_issue_frame_by_section,
 ) = load_data()
 
 
@@ -190,6 +223,8 @@ def prettify_label(x: str) -> str:
         return ORIENTATION_LABEL_MAP[x]
     if x in SDG_LABEL_MAP:
         return SDG_LABEL_MAP[x]
+    if x in ISSUE_FRAME_LABEL_MAP:
+        return ISSUE_FRAME_LABEL_MAP[x]
     return x.replace("_", " ").title()
 
 
@@ -209,6 +244,16 @@ def explode_sdg_chunks(df: pd.DataFrame) -> pd.DataFrame:
 
 def filter_chunks_by_sdg(df: pd.DataFrame, sdg: str) -> pd.DataFrame:
     return df[df["sdg_labels"].map(parse_sdg_labels).map(lambda labels: sdg in labels)].copy()
+
+
+def build_issue_frame_section_heatmap(df: pd.DataFrame) -> pd.DataFrame:
+    heatmap_df = (
+        df.pivot(index="issue_frame", columns="section_label", values="share")
+        .fillna(0.0)
+    )
+    ordered_index = [label for label in ISSUE_FRAME_ORDER if label in heatmap_df.index]
+    ordered_cols = [label for label in SECTION_ORDER if label in heatmap_df.columns]
+    return heatmap_df.reindex(index=ordered_index, columns=ordered_cols).fillna(0.0)
 
 
 def make_wordcloud_from_tfidf(
@@ -501,7 +546,7 @@ page_mode = st.sidebar.selectbox(
 
 view_mode = st.sidebar.radio(
     "Explorer mode",
-    ["Section view", "Orientation view", "SDG view"]
+    ["Section view", "Orientation view", "SDG view", "Issue Frame view"]
 )
 
 top_k = st.sidebar.slider("Top keywords", min_value=10, max_value=30, value=15, step=5)
@@ -598,6 +643,29 @@ if page_mode == "Overview":
         "These example chunks are ranked by overlap with top action-oriented terms, then by SDG confidence and chunk richness.",
     )
     render_chunk_cards(filtered_chunks, overview_terms, max_chunks=min(max_chunks, 3))
+
+    st.markdown("### Issue Framing Layer")
+    render_interpretation(
+        "Issue Framing",
+        "This layer groups report language into broad strategic issue categories so you can explain whether TSMC emphasizes environment, labor and talent, supply chain controls, innovation, or governance and risk.",
+    )
+
+    issue_col1, issue_col2 = st.columns(2)
+    with issue_col1:
+        plot_distribution_bar(df_chunks, "issue_frame", "Dominant Issue Frame Distribution")
+    with issue_col2:
+        top_issue_frames = (
+            df_issue_frame_distribution.sort_values("count", ascending=False)
+            .head(3)
+            .copy()
+        )
+        top_issue_frames["issue_frame"] = top_issue_frames["issue_frame"].map(prettify_label)
+        top_issue_frames["share"] = (top_issue_frames["share"] * 100).round(1)
+        st.markdown("**Top issue frames**")
+        st.dataframe(top_issue_frames, use_container_width=True, hide_index=True)
+
+    issue_heatmap = build_issue_frame_section_heatmap(df_issue_frame_by_section)
+    plot_heatmap(issue_heatmap.round(3), "Issue Frame Share Across ESG Sections")
 
     st.markdown("### Cross-Section Theme Overlap")
     heatmap_section = build_overlap_heatmap(
@@ -791,7 +859,7 @@ else:
                     else:
                         render_chunk_cards(df_chunk_ori, df_terms, max_chunks=max_chunks)
 
-    else:  # SDG view
+    elif view_mode == "SDG view":
         tabs = st.tabs([SDG_LABEL_MAP.get(x, x) for x in SDG_ORDER])
 
         for tab, sdg in zip(tabs, SDG_ORDER):
@@ -837,6 +905,53 @@ else:
                         st.info("No chunks match the current filter.")
                     else:
                         render_chunk_cards(df_chunk_sdg, df_terms, max_chunks=max_chunks)
+
+    else:  # Issue Frame view
+        tabs = st.tabs([ISSUE_FRAME_LABEL_MAP.get(x, x) for x in ISSUE_FRAME_ORDER])
+
+        for tab, issue_frame in zip(tabs, ISSUE_FRAME_ORDER):
+            with tab:
+                df_terms = df_issue_frame_tfidf[df_issue_frame_tfidf["issue_frame"] == issue_frame].copy()
+                df_chunk_issue = filtered_chunks[filtered_chunks["issue_frame"] == issue_frame].copy()
+
+                count_issue = len(df_chunks[df_chunks["issue_frame"] == issue_frame])
+                st.subheader(f"{ISSUE_FRAME_LABEL_MAP.get(issue_frame, issue_frame)} Analysis ({count_issue} chunks)")
+                render_interpretation(
+                    ISSUE_FRAME_LABEL_MAP.get(issue_frame, issue_frame),
+                    ISSUE_FRAME_NARRATIVE.get(issue_frame, "This issue frame summarizes a major strategic theme in the report."),
+                )
+
+                left, right = st.columns([1.2, 1])
+
+                with left:
+                    st.markdown("**Word Cloud**")
+                    wc = make_wordcloud_from_tfidf(df_terms.head(80))
+                    if wc:
+                        plot_wordcloud(wc)
+                    else:
+                        st.info("No terms available.")
+
+                with right:
+                    st.markdown("**Top Keywords**")
+                    plot_top_terms(
+                        df_terms,
+                        title=f"Top TF-IDF Terms: {ISSUE_FRAME_LABEL_MAP.get(issue_frame, issue_frame)}",
+                        top_k=top_k
+                    )
+
+                st.markdown("**Top Keywords Table**")
+                st.dataframe(
+                    get_top_terms_table(df_terms, top_k=top_k),
+                    use_container_width=True,
+                    hide_index=True
+                )
+
+                if show_chunks:
+                    st.markdown("**Representative Chunks**")
+                    if len(df_chunk_issue) == 0:
+                        st.info("No chunks match the current filter.")
+                    else:
+                        render_chunk_cards(df_chunk_issue, df_terms, max_chunks=max_chunks)
 
 
 # =========================
