@@ -121,6 +121,20 @@ SDG_NARRATIVE = {
     ),
 }
 
+SECTION_NARRATIVE = {
+    "environment": "Environment language centers on operational resource management, especially water, energy, waste, and carbon.",
+    "talent": "Talent language emphasizes employees, health, safety, and development, showing a people-and-workforce framing.",
+    "supply_chain": "Supply chain language is compliance-heavy, with supplier controls, audits, and material-risk management standing out.",
+    "social": "Social language highlights foundations, education, volunteering, and public-facing community programs.",
+    "governance": "Governance language is structured around oversight, directors, committees, tax, and risk management.",
+}
+
+ORIENTATION_NARRATIVE = {
+    "action_oriented": "Action-oriented chunks emphasize execution, controls, and measurable implementation through operational verbs and targets.",
+    "people_centric": "People-centric chunks emphasize workforce safety, care, learning, and stakeholder-facing human impacts.",
+    "mixed": "Mixed chunks combine implementation language with stakeholder or workforce language, often in cross-functional reporting sections.",
+}
+
 
 # =========================
 # Load data
@@ -231,23 +245,70 @@ def get_top_terms_table(df: pd.DataFrame, top_k: int = 20):
     return out
 
 
-def render_chunk_cards(df: pd.DataFrame, max_chunks: int = 5):
-    view_df = df.copy()
-    if "clean_text" in view_df.columns:
-        view_df["token_count"] = view_df["clean_text"].str.split().str.len()
-        view_df = view_df.sort_values("token_count", ascending=False)
+def get_top_terms_list(df: pd.DataFrame, top_k: int = 8) -> list[str]:
+    if df.empty:
+        return []
+    return (
+        df.sort_values("tfidf_score", ascending=False)
+        .head(top_k)["term"]
+        .astype(str)
+        .tolist()
+    )
 
-    for i, (_, row) in enumerate(view_df.head(max_chunks).iterrows(), start=1):
+
+def chunk_match_count(raw_text: str, terms: list[str]) -> int:
+    text = str(raw_text).lower()
+    return sum(1 for term in terms if term.lower() in text)
+
+
+def rank_representative_chunks(
+    df: pd.DataFrame,
+    df_terms: pd.DataFrame,
+    max_chunks: int,
+) -> pd.DataFrame:
+    if df.empty:
+        return df.copy()
+
+    ranked = df.copy()
+    top_terms = get_top_terms_list(df_terms, top_k=8)
+    ranked["token_count"] = ranked["clean_text"].fillna("").str.split().str.len()
+    ranked["term_matches"] = ranked["raw_text"].fillna("").map(lambda text: chunk_match_count(text, top_terms))
+    if "sdg_confidence" not in ranked.columns:
+        ranked["sdg_confidence"] = 0.0
+
+    ranked = ranked.sort_values(
+        ["term_matches", "sdg_confidence", "token_count"],
+        ascending=[False, False, False],
+    )
+    return ranked.head(max_chunks).copy()
+
+
+def render_interpretation(title: str, text: str):
+    st.markdown(f"**Interpretation: {title}**")
+    st.caption(text)
+
+
+def render_chunk_cards(df: pd.DataFrame, df_terms: pd.DataFrame, max_chunks: int = 5):
+    view_df = df.copy()
+    view_df = rank_representative_chunks(view_df, df_terms, max_chunks=max_chunks)
+    top_terms = get_top_terms_list(df_terms, top_k=8)
+
+    for i, (_, row) in enumerate(view_df.iterrows(), start=1):
         label_section = prettify_label(row["section_label"])
         label_orientation = prettify_label(row["orientation"])
         label_SDGs = ", ".join(prettify_label(label) for label in parse_sdg_labels(row.get("sdg_labels", "")))
         confidence = float(row.get("sdg_confidence", 0.0))
         confidence_text = f" | SDG confidence {confidence:.2f}" if confidence > 0 else ""
+        token_count = int(row.get("token_count", 0))
+        term_matches = int(row.get("term_matches", 0))
+        matched_terms = [term for term in top_terms if term.lower() in str(row["raw_text"]).lower()][:4]
+        evidence_text = ", ".join(matched_terms) if matched_terms else "No top-term overlap"
 
         with st.expander(
             f"Chunk {i} | {label_section} | {label_orientation} | {label_SDGs}{confidence_text}",
             expanded=False
         ):
+            st.caption(f"Evidence: {term_matches} top-term matches | {token_count} clean tokens | {evidence_text}")
             st.write(row["raw_text"])
 
 
@@ -480,6 +541,14 @@ if page_mode == "Overview":
 
     plot_distribution_bar(df_chunks_sdg_exploded, "sdg_labels", "SDG Distribution")
 
+    st.markdown("### Evidence Snapshot")
+    overview_terms = df_orientation_tfidf[df_orientation_tfidf["orientation"] == "action_oriented"].copy()
+    render_interpretation(
+        "Overview",
+        "These example chunks are ranked by overlap with top action-oriented terms, then by SDG confidence and chunk richness.",
+    )
+    render_chunk_cards(filtered_chunks, overview_terms, max_chunks=min(max_chunks, 3))
+
     st.markdown("### Cross-Section Theme Overlap")
     heatmap_section = build_overlap_heatmap(
         df_section_tfidf,
@@ -531,6 +600,10 @@ else:
 
                 count_section = len(df_chunks[df_chunks["section_label"] == section])
                 st.subheader(f"{SECTION_LABEL_MAP.get(section, section)} Analysis ({count_section} chunks)")
+                render_interpretation(
+                    SECTION_LABEL_MAP.get(section, section),
+                    SECTION_NARRATIVE.get(section, "This section summarizes the dominant language and evidence for this category."),
+                )
 
                 left, right = st.columns([1.2, 1])
 
@@ -562,7 +635,7 @@ else:
                     if len(df_chunk_section) == 0:
                         st.info("No chunks match the current filter.")
                     else:
-                        render_chunk_cards(df_chunk_section, max_chunks=max_chunks)
+                        render_chunk_cards(df_chunk_section, df_terms, max_chunks=max_chunks)
 
     elif view_mode == "Orientation view":
         tabs = st.tabs([ORIENTATION_LABEL_MAP.get(x, x) for x in ORIENTATION_ORDER])
@@ -574,6 +647,10 @@ else:
 
                 count_orientation = len(df_chunks[df_chunks["orientation"] == orientation])
                 st.subheader(f"{ORIENTATION_LABEL_MAP.get(orientation, orientation)} Analysis ({count_orientation} chunks)")
+                render_interpretation(
+                    ORIENTATION_LABEL_MAP.get(orientation, orientation),
+                    ORIENTATION_NARRATIVE.get(orientation, "This view compares how implementation language and stakeholder language are framed."),
+                )
 
                 left, right = st.columns([1.2, 1])
 
@@ -605,7 +682,7 @@ else:
                     if len(df_chunk_ori) == 0:
                         st.info("No chunks match the current filter.")
                     else:
-                        render_chunk_cards(df_chunk_ori, max_chunks=max_chunks)
+                        render_chunk_cards(df_chunk_ori, df_terms, max_chunks=max_chunks)
 
     else:  # SDG view
         tabs = st.tabs([SDG_LABEL_MAP.get(x, x) for x in SDG_ORDER])
@@ -617,6 +694,10 @@ else:
 
                 count_sdg = len(filter_chunks_by_sdg(df_chunks, sdg))
                 st.subheader(f"{SDG_LABEL_MAP.get(sdg, sdg)} Analysis ({count_sdg} chunks)")
+                render_interpretation(
+                    SDG_LABEL_MAP.get(sdg, sdg),
+                    SDG_NARRATIVE.get(sdg, "This SDG view shows the most distinctive terms and representative supporting chunks."),
+                )
 
                 left, right = st.columns([1.2, 1])
 
@@ -648,7 +729,7 @@ else:
                     if len(df_chunk_sdg) == 0:
                         st.info("No chunks match the current filter.")
                     else:
-                        render_chunk_cards(df_chunk_sdg, max_chunks=max_chunks)
+                        render_chunk_cards(df_chunk_sdg, df_terms, max_chunks=max_chunks)
 
 
 # =========================
