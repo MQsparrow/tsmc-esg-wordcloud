@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
+import networkx as nx
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
 import plotly.express as px
+import plotly.graph_objects as go
 
 
 # =========================
@@ -38,6 +41,7 @@ ORIENTATION_SIMILARITY_PATH = OUTPUT_DIR / "similarity_by_orientation.csv"
 SDG_SIMILARITY_PATH = OUTPUT_DIR / "similarity_by_sdg.csv"
 ISSUE_FRAME_DISTRIBUTION_PATH = OUTPUT_DIR / "issue_frame_distribution.csv"
 ISSUE_FRAME_BY_SECTION_PATH = OUTPUT_DIR / "issue_frame_by_section.csv"
+ISSUE_FRAME_COOCCURRENCE_PATH = OUTPUT_DIR / "issue_frame_cooccurrence.csv"
 
 
 # =========================
@@ -176,6 +180,7 @@ def load_data():
     df_sdg_similarity = pd.read_csv(SDG_SIMILARITY_PATH, index_col=0)
     df_issue_frame_distribution = pd.read_csv(ISSUE_FRAME_DISTRIBUTION_PATH)
     df_issue_frame_by_section = pd.read_csv(ISSUE_FRAME_BY_SECTION_PATH)
+    df_issue_frame_cooccurrence = pd.read_csv(ISSUE_FRAME_COOCCURRENCE_PATH)
 
     for col in ["raw_text", "clean_text", "section_label", "orientation", "sdg_labels", "issue_frame"]:
         if col in df_chunks.columns:
@@ -196,6 +201,7 @@ def load_data():
         df_sdg_similarity,
         df_issue_frame_distribution,
         df_issue_frame_by_section,
+        df_issue_frame_cooccurrence,
     )
 
 
@@ -210,6 +216,7 @@ def load_data():
     df_sdg_similarity,
     df_issue_frame_distribution,
     df_issue_frame_by_section,
+    df_issue_frame_cooccurrence,
 ) = load_data()
 
 
@@ -478,6 +485,135 @@ def plot_distribution_bar(df: pd.DataFrame, col: str, title: str):
         yaxis_title="Count"
     )
     st.plotly_chart(fig, use_container_width=True)
+
+
+def plot_issue_frame_cooccurrence_network(
+    df_edges: pd.DataFrame,
+    issue_frame: str,
+    title: str,
+):
+    network_df = df_edges[df_edges["issue_frame"] == issue_frame].copy()
+    if network_df.empty:
+        st.info("No co-occurrence edges available for this issue frame.")
+        return
+
+    graph = nx.from_pandas_edgelist(
+        network_df,
+        source="term_a",
+        target="term_b",
+        edge_attr="weight",
+        create_using=nx.Graph(),
+    )
+    if graph.number_of_nodes() < 2:
+        st.info("Not enough connected terms to render a network.")
+        return
+
+    positions = nx.spring_layout(graph, weight="weight", seed=42, k=0.9 / math.sqrt(graph.number_of_nodes()))
+    weighted_degree = dict(graph.degree(weight="weight"))
+    degree_centrality = nx.degree_centrality(graph)
+
+    edge_x: list[float | None] = []
+    edge_y: list[float | None] = []
+    edge_text_x: list[float] = []
+    edge_text_y: list[float] = []
+    edge_text: list[str] = []
+
+    max_weight = max(float(attrs.get("weight", 0.0)) for _, _, attrs in graph.edges(data=True))
+    for term_a, term_b, attrs in graph.edges(data=True):
+        weight = float(attrs.get("weight", 0.0))
+        x0, y0 = positions[term_a]
+        x1, y1 = positions[term_b]
+        edge_x.extend([x0, x1, None])
+        edge_y.extend([y0, y1, None])
+        edge_text_x.append((x0 + x1) / 2)
+        edge_text_y.append((y0 + y1) / 2)
+        edge_text.append(f"{term_a} ↔ {term_b} | weight {int(weight)}")
+
+    fig = go.Figure()
+    for term_a, term_b, attrs in graph.edges(data=True):
+        weight = float(attrs.get("weight", 0.0))
+        x0, y0 = positions[term_a]
+        x1, y1 = positions[term_b]
+        fig.add_trace(
+            go.Scatter(
+                x=[x0, x1],
+                y=[y0, y1],
+                mode="lines",
+                line=dict(color="#94a3b8", width=1.5 + (4.0 * weight / max_weight)),
+                hovertemplate=f"{term_a} ↔ {term_b} | weight {int(weight)}<extra></extra>",
+                showlegend=False,
+            )
+        )
+
+    edge_label_trace = go.Scatter(
+        x=edge_text_x,
+        y=edge_text_y,
+        mode="markers",
+        marker=dict(size=8, color="rgba(0,0,0,0)"),
+        text=edge_text,
+        hovertemplate="%{text}<extra></extra>",
+        showlegend=False,
+    )
+    fig.add_trace(edge_label_trace)
+
+    nodes = sorted(graph.nodes())
+    node_x = [positions[node][0] for node in nodes]
+    node_y = [positions[node][1] for node in nodes]
+    node_sizes = [18 + (weighted_degree[node] * 2.5) for node in nodes]
+    node_labels = [
+        f"{node}<br>connected weight {weighted_degree[node]:.0f}<br>centrality {degree_centrality[node]:.2f}"
+        for node in nodes
+    ]
+
+    node_trace = go.Scatter(
+        x=node_x,
+        y=node_y,
+        mode="markers+text",
+        text=nodes,
+        textposition="top center",
+        hovertext=node_labels,
+        hovertemplate="%{hovertext}<extra></extra>",
+        marker=dict(
+            size=node_sizes,
+            color="#0f766e",
+            line=dict(color="#134e4a", width=1.5),
+            opacity=0.9,
+        ),
+        showlegend=False,
+    )
+    fig.add_trace(node_trace)
+
+    fig.update_layout(
+        title=title,
+        height=560,
+        margin=dict(l=20, r=20, t=60, b=20),
+        xaxis=dict(visible=False),
+        yaxis=dict(visible=False),
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+    edge_table = network_df.sort_values("weight", ascending=False).copy()
+    edge_table["term_a"] = edge_table["term_a"].astype(str)
+    edge_table["term_b"] = edge_table["term_b"].astype(str)
+    st.caption("Top co-occurring keyword pairs within this issue frame.")
+    st.dataframe(edge_table.head(10), use_container_width=True, hide_index=True)
+
+    centrality_table = (
+        pd.DataFrame(
+            {
+                "term": list(graph.nodes()),
+                "connected_weight": [round(weighted_degree[node], 2) for node in graph.nodes()],
+                "degree_centrality": [round(degree_centrality[node], 3) for node in graph.nodes()],
+            }
+        )
+        .sort_values(["connected_weight", "degree_centrality"], ascending=False)
+        .head(10)
+        .reset_index(drop=True)
+    )
+    st.caption("Most central terms in this issue-frame network.")
+    st.dataframe(centrality_table, use_container_width=True, hide_index=True)
 
 
 _SDG9_EXCLUSIVE_TERMS = {"trade_secret", "trade_secret registration", "patent application", "patent"}
@@ -944,6 +1080,16 @@ else:
                     get_top_terms_table(df_terms, top_k=top_k),
                     use_container_width=True,
                     hide_index=True
+                )
+
+                st.markdown("**Co-occurrence Network**")
+                st.caption(
+                    "This network links high-signal terms that appear together inside the same chunks for this issue frame."
+                )
+                plot_issue_frame_cooccurrence_network(
+                    df_issue_frame_cooccurrence,
+                    issue_frame=issue_frame,
+                    title=f"Co-occurrence Network: {ISSUE_FRAME_LABEL_MAP.get(issue_frame, issue_frame)}",
                 )
 
                 if show_chunks:

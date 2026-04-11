@@ -25,8 +25,8 @@ data/raw/
 data/processed/
 
 # Outputs
-outputs/figures/
-outputs/models/
+outputs/logs
+outputs/legacy
 
 # Logs
 *.log

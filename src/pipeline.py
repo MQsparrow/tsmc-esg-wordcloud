@@ -7,10 +7,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Dict, Tuple
 
+import networkx as nx
 import pandas as pd
 import spacy
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from itertools import combinations
 
 
 # =========================
@@ -775,6 +777,85 @@ def build_issue_frame_distribution(
     return summary
 
 
+def build_issue_frame_cooccurrence(
+    df_chunks: pd.DataFrame,
+    df_issue_frame_terms: pd.DataFrame,
+    issue_col: str = "issue_frame",
+    text_col: str = "clean_text",
+    top_terms_per_frame: int = 15,
+    top_nodes_per_frame: int = 10,
+    top_edges_per_frame: int = 20,
+    min_edge_weight: int = 2,
+) -> pd.DataFrame:
+    records = []
+
+    for issue_frame in df_issue_frame_terms[issue_col].dropna().unique():
+        frame_terms = (
+            df_issue_frame_terms[df_issue_frame_terms[issue_col] == issue_frame]
+            .sort_values("tfidf_score", ascending=False)
+            .head(top_terms_per_frame)["term"]
+            .astype(str)
+            .tolist()
+        )
+        if len(frame_terms) < 2:
+            continue
+
+        graph = nx.Graph()
+        frame_chunks = df_chunks[df_chunks[issue_col] == issue_frame]
+        for text in frame_chunks[text_col].fillna("").astype(str):
+            token_set = set(text.split())
+            present_terms = sorted(term for term in frame_terms if term in token_set)
+            for term_a, term_b in combinations(present_terms, 2):
+                if graph.has_edge(term_a, term_b):
+                    graph[term_a][term_b]["weight"] += 1
+                else:
+                    graph.add_edge(term_a, term_b, weight=1)
+
+        if graph.number_of_edges() == 0:
+            continue
+
+        filtered_edges = [
+            (term_a, term_b, attrs)
+            for term_a, term_b, attrs in graph.edges(data=True)
+            if attrs.get("weight", 0) >= min_edge_weight
+        ]
+        if not filtered_edges:
+            continue
+
+        filtered_graph = nx.Graph()
+        filtered_graph.add_edges_from(filtered_edges)
+        weighted_degree = dict(filtered_graph.degree(weight="weight"))
+        top_nodes = {
+            node
+            for node, _ in sorted(
+                weighted_degree.items(),
+                key=lambda item: item[1],
+                reverse=True,
+            )[:top_nodes_per_frame]
+        }
+        filtered_graph = filtered_graph.subgraph(top_nodes).copy()
+
+        sorted_edges = sorted(
+            filtered_graph.edges(data=True),
+            key=lambda item: item[2].get("weight", 0),
+            reverse=True,
+        )[:top_edges_per_frame]
+        for term_a, term_b, attrs in sorted_edges:
+            weight = int(attrs.get("weight", 0))
+            records.append(
+                {
+                    "issue_frame": issue_frame,
+                    "term_a": term_a,
+                    "term_b": term_b,
+                    "weight": weight,
+                    "degree_a": float(weighted_degree.get(term_a, 0.0)),
+                    "degree_b": float(weighted_degree.get(term_b, 0.0)),
+                }
+            )
+
+    return pd.DataFrame(records)
+
+
 # =========================
 # 8. FULL PIPELINE
 # =========================
@@ -853,6 +934,8 @@ def save_outputs(
         df_chunks, group_col="issue_frame", top_k=30
     )
     df_issue_frame_terms.to_csv(output_path / "tfidf_by_issue_frame.csv", index=False)
+    issue_frame_cooccurrence = build_issue_frame_cooccurrence(df_chunks, df_issue_frame_terms)
+    issue_frame_cooccurrence.to_csv(output_path / "issue_frame_cooccurrence.csv", index=False)
     similarity_section = build_cosine_similarity_by_group(df_chunks, group_col="section_label")
     similarity_section.to_csv(output_path / "similarity_by_section.csv", index=True)
     similarity_orientation = build_cosine_similarity_by_group(df_chunks, group_col="orientation")
@@ -887,4 +970,5 @@ def save_outputs(
         "sdg_similarity": similarity_sdg,
         "issue_frame_distribution": issue_frame_distribution,
         "issue_frame_by_section": issue_frame_by_section,
+        "issue_frame_cooccurrence": issue_frame_cooccurrence,
     }
