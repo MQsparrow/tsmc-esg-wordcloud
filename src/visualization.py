@@ -6,8 +6,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
 
-KEYWORD_FILE = Path("outputs/models/top_keywords.csv")
-OUTPUT_DIR = Path("outputs/figures")
+KEYWORD_FILE = Path("outputs/legacy/models/top_keywords.csv")
+OUTPUT_DIR = Path("outputs/legacy/figures")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 OUTPUT_IMAGE = OUTPUT_DIR / "tsmc_wordcloud.png"
@@ -15,7 +15,7 @@ OUTPUT_IMAGE = OUTPUT_DIR / "tsmc_wordcloud.png"
 
 def main() -> None:
     if not KEYWORD_FILE.exists():
-        raise FileNotFoundError("top_keywords.csv not found. Run feature.py first.")
+        raise FileNotFoundError("top_keywords.csv not found. Run `python main.py` and then `python src/feature.py`.")
 
     df = pd.read_csv(KEYWORD_FILE)
 

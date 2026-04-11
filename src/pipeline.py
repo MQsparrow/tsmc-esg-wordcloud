@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from pathlib import Path
 from typing import List, Dict, Tuple
 
 import pandas as pd
@@ -210,6 +211,7 @@ class ChunkRecord:
     section_label: str
     orientation: str
     sdg_labels: str
+    sdg_confidence: float
 
 
 # =========================
@@ -252,9 +254,20 @@ def remove_page_artifacts(text: str) -> str:
     """
     lines = text.splitlines()
     cleaned = []
+    skip_until_next_page_marker = False
 
     for line in lines:
         s = line.strip()
+
+        if s == "Contents":
+            skip_until_next_page_marker = True
+            continue
+
+        if skip_until_next_page_marker:
+            if re.fullmatch(r"--- PAGE \d+ ---", s):
+                skip_until_next_page_marker = False
+            else:
+                continue
 
         # 空行保留
         if not s:
@@ -262,6 +275,20 @@ def remove_page_artifacts(text: str) -> str:
             continue
 
         # 單獨頁碼
+        if re.fullmatch(r"--- PAGE \d+ ---", s):
+            continue
+
+        if s == "Overview Sustainable Business Practices Operations and Governance Appendix":
+            continue
+        if s == "2024 Sustainability Report":
+            continue
+        if s == "An Innovation Pioneer A Responsible Purchaser A Practitioner of Green Power An Admired Employer Power to Change Society":
+            continue
+        if s.startswith("Please refer to the following instructions as a guide for reading this report"):
+            continue
+        if s.startswith("Click to proceed to the external hyperlink"):
+            continue
+
         if re.fullmatch(r"\d{1,4}", s):
             continue
 
@@ -309,11 +336,93 @@ def basic_pdf_cleanup(text: str) -> str:
 # 4. CHUNKING
 # =========================
 
+def is_noisy_fragment(text: str) -> bool:
+    s = " ".join(text.split())
+    if not s:
+        return True
+
+    lower = s.lower()
+    words = s.split()
+
+    if len(words) <= 12:
+        if re.fullmatch(r"(overview|appendix|contents?|index)", lower):
+            return True
+        if re.fullmatch(r"[a-z]", lower):
+            return True
+        if lower == "(continued from the previous page)":
+            return True
+        if s in {"●", "â—"}:
+            return True
+
+    if len(words) <= 30:
+        if lower.startswith("please refer to the following instructions"):
+            return True
+        if lower.startswith("click to proceed to the external hyperlink"):
+            return True
+        if lower.startswith("click to send feedback"):
+            return True
+        if lower.startswith("click to return to the table of content"):
+            return True
+
+    if len(words) <= 20 and s == s.title():
+        return True
+
+    return False
+
+
+def should_buffer_short_paragraph(text: str, min_words: int) -> bool:
+    if is_noisy_fragment(text):
+        return False
+    return len(text.split()) < min_words
+
+
+def is_header_like_line(line: str) -> bool:
+    s = " ".join(line.split())
+    if not s:
+        return False
+
+    words = s.split()
+    if len(words) > 12:
+        return False
+    if re.search(r"[.!?]$", s):
+        return False
+
+    return s == s.title()
+
+
+def looks_like_body_line(line: str) -> bool:
+    s = " ".join(line.split())
+    if not s:
+        return False
+
+    return len(s.split()) >= 12 or bool(re.search(r"[,:;.!?]", s))
+
+
+def strip_leading_header_lines(paragraph: str) -> str:
+    lines = [line.strip() for line in paragraph.splitlines() if line.strip()]
+    if not lines:
+        return ""
+
+    body_idx = None
+    for idx, line in enumerate(lines[:5]):
+        if looks_like_body_line(line):
+            body_idx = idx
+            break
+
+    if body_idx is not None and body_idx > 0:
+        leading_block = lines[:body_idx]
+        if all(is_header_like_line(line) or is_noisy_fragment(line) for line in leading_block):
+            lines = lines[body_idx:]
+
+    return "\n".join(lines).strip()
+
+
 def split_into_paragraphs(text: str, min_len: int = 80) -> List[str]:
     """
     先以空行切段，再把太短的段落過濾掉。
     """
-    paras = [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
+    paras = [strip_leading_header_lines(p.strip()) for p in re.split(r"\n\s*\n", text) if p.strip()]
+    paras = [p for p in paras if not is_noisy_fragment(p)]
     paras = [p for p in paras if len(p) >= min_len]
     return paras
 
@@ -326,9 +435,10 @@ def merge_short_paragraphs(paragraphs: List[str], min_words: int = 40) -> List[s
     buffer = ""
 
     for para in paragraphs:
-        word_count = len(para.split())
+        if is_noisy_fragment(para):
+            continue
 
-        if word_count < min_words:
+        if should_buffer_short_paragraph(para, min_words):
             buffer = f"{buffer} {para}".strip()
         else:
             if buffer:
@@ -399,18 +509,41 @@ def get_sdg_scores(text: str) -> Dict[str, int]:
         for sdg, kws in SDG_KEYWORDS.items()
     }
 
-def classify_sdg(text: str, threshold: int = 2) -> List[str]:
+def classify_sdg(
+    text: str,
+    threshold: int = 3,
+    max_labels: int = 2,
+    secondary_ratio: float = 0.75,
+) -> Tuple[List[str], float]:
     scores = get_sdg_scores(text)
-    matched = [sdg for sdg, score in scores.items() if score >= threshold]
-    return matched if matched else ["unclassified"]
+    ranked = sorted(scores.items(), key=lambda item: item[1], reverse=True)
+
+    if not ranked or ranked[0][1] < threshold:
+        return ["unclassified"], 0.0
+
+    top_sdg, top_score = ranked[0]
+    total_signal = sum(score for _, score in ranked if score > 0)
+    labels = [top_sdg]
+
+    if max_labels > 1 and len(ranked) > 1:
+        second_sdg, second_score = ranked[1]
+        if (
+            second_score >= threshold
+            and top_score > 0
+            and (second_score / top_score) >= secondary_ratio
+        ):
+            labels.append(second_sdg)
+
+    confidence = top_score / total_signal if total_signal else 0.0
+    if len(labels) == 2:
+        confidence = (top_score + ranked[1][1]) / total_signal if total_signal else 0.0
+
+    return labels, round(confidence, 4)
 
 
 def get_dominant_sdg(text: str) -> str:
-    scores = get_sdg_scores(text)
-    best = max(scores, key=scores.get)
-    if scores[best] == 0:
-        return "unclassified"
-    return best
+    labels, _ = classify_sdg(text, max_labels=1)
+    return labels[0]
 
 # =========================
 # 6. TOKENIZATION / LEMMATIZATION / POS FILTER
@@ -552,6 +685,7 @@ def run_pipeline(raw_text: str, nlp) -> pd.DataFrame:
         section_label = classify_section(chunk)
         clean_text, kept_tokens = preprocess_chunk(chunk, nlp)
         orientation = classify_orientation(kept_tokens)
+        sdg_labels, sdg_confidence = classify_sdg(chunk)
         if len(clean_text.split()) < 20:
             continue
 
@@ -568,7 +702,8 @@ def run_pipeline(raw_text: str, nlp) -> pd.DataFrame:
                 clean_text=clean_text,
                 section_label=section_label,
                 orientation=orientation,
-                sdg_labels=",".join(classify_sdg(chunk)),
+                sdg_labels=",".join(sdg_labels),
+                sdg_confidence=sdg_confidence,
             ).__dict__
         )
 
@@ -587,22 +722,22 @@ def save_outputs(
     df_chunks: pd.DataFrame,
     output_dir: str = "outputs"
 ):
-    import os
-    os.makedirs(output_dir, exist_ok=True)
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
 
-    df_chunks.to_csv(f"{output_dir}/chunks_processed.csv", index=False)
+    df_chunks.to_csv(output_path / "chunks_processed.csv", index=False)
 
     # top terms by section
     df_section_terms = extract_top_terms_per_group(
         df_chunks, group_col="section_label", top_k=30
     )
-    df_section_terms.to_csv(f"{output_dir}/tfidf_by_section.csv", index=False)
+    df_section_terms.to_csv(output_path / "tfidf_by_section.csv", index=False)
 
     # top terms by orientation
     df_orientation_terms = extract_top_terms_per_group(
         df_chunks, group_col="orientation", top_k=30
     )
-    df_orientation_terms.to_csv(f"{output_dir}/tfidf_by_orientation.csv", index=False)
+    df_orientation_terms.to_csv(output_path / "tfidf_by_orientation.csv", index=False)
 
     # top terms by SDG (explode multi-labels so each chunk contributes to all its SDGs)
     df_exploded = (
@@ -614,7 +749,7 @@ def save_outputs(
     df_sdg_terms = extract_top_terms_per_group(
         df_exploded, group_col="sdg_labels", top_k=30
     )
-    df_sdg_terms.to_csv(f"{output_dir}/tfidf_by_sdg.csv", index=False)
+    df_sdg_terms.to_csv(output_path / "tfidf_by_sdg.csv", index=False)
 
     return {
         "chunks": df_chunks,

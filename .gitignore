@@ -33,3 +33,8 @@ outputs/models/
 
 # VSCode
 .vscode/
+
+# codex
+AGENTS.md
+PLAN.md
+

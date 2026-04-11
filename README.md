@@ -35,7 +35,7 @@ The final result is an interactive Streamlit dashboard for exploration and prese
   * Action-Oriented language (e.g., reduce, improve, implement)
   * People-Centric language (e.g., employee, community, safety)
 
-* **SDG multi-label classification**
+* **SDG classification with dominance control**
 
   * SDG 3 – Good Health and Well-being
   * SDG 4 – Quality Education
@@ -47,7 +47,7 @@ The final result is an interactive Streamlit dashboard for exploration and prese
   * SDG 13 – Climate Action
   * SDG 17 – Partnerships for the Goals
 
-  Each chunk can be tagged with multiple SDGs (threshold ≥ 2 keyword hits). Word-boundary matching prevents substring false positives. Protected phrases (e.g., `trade secret`) are preserved through tokenization.
+  Each chunk is assigned at most 2 SDGs using keyword scoring, a stronger minimum signal threshold, and a dominance rule. Word-boundary matching prevents substring false positives. Protected phrases (e.g., `trade secret`) are preserved through tokenization.
 
 * **Visualizations**
 
@@ -80,7 +80,7 @@ Preprocessing
 Classification
    - ESG section labeling (rule-based)
    - orientation (action vs people)
-   - SDG multi-label (keyword hit threshold)
+   - SDG top-1 / top-2 assignment with confidence
    ↓
 TF-IDF Analysis
    - per section
@@ -193,8 +193,39 @@ The Streamlit app includes:
 
 ```bash
 pip install -r requirements.txt
+python main.py --audit
 streamlit run app.py
 ```
+
+Optional compatibility flow for the older word-cloud-only app:
+
+```bash
+python src/feature.py
+python src/visualization.py
+streamlit run app/streamlit_app.py
+```
+
+## Demo Flow
+
+Recommended presentation flow:
+
+1. Run `python main.py --audit` to regenerate outputs and confirm the Phase 1 checks pass.
+2. Open `streamlit run app.py`.
+3. Start on the `Overview` page:
+   show section, orientation, and SDG distributions plus the overlap heatmaps.
+4. Move to `Explorer`:
+   use `Section view`, then `Orientation view`, then `SDG view`.
+5. Open representative chunks to connect the TF-IDF terms back to report evidence.
+
+## Frozen Baseline
+
+The baseline deliverable for this repo is:
+
+- one unified preprocessing pipeline in `src/pipeline.py`
+- output CSVs in `outputs/`
+- a Streamlit dashboard in `app.py`
+- a Phase 1 audit in `src/phase1_audit.py`
+- optional legacy word-cloud scripts kept only for compatibility
 
 ---
 

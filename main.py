@@ -1,16 +1,36 @@
 # main.py
 
+import argparse
 from pathlib import Path
+
+from src.phase1_audit import print_report
 from src.pipeline import load_spacy_model, run_pipeline, save_outputs
 
-def main():
-    text_path = Path("data/raw/tsmc_report.txt")
-    raw_text = text_path.read_text(encoding="utf-8")
+TEXT_PATH = Path("data/raw/tsmc_report.txt")
+OUTPUT_DIR = Path("outputs")
+
+
+def print_top_terms(df, group_col: str, label: str) -> None:
+    print(f"\n=== Top {label} terms ===")
+    for group in df[group_col].unique():
+        print(f"\n[{group}]")
+        print(
+            df.loc[df[group_col] == group, ["term", "tfidf_score"]]
+            .head(10)
+            .to_string(index=False)
+        )
+
+
+def main(run_audit: bool = False):
+    if not TEXT_PATH.exists():
+        raise FileNotFoundError(f"Input text file not found: {TEXT_PATH}")
+
+    raw_text = TEXT_PATH.read_text(encoding="utf-8")
 
     nlp = load_spacy_model("en_core_web_sm")
 
     df_chunks = run_pipeline(raw_text, nlp)
-    outputs = save_outputs(df_chunks, output_dir="outputs")
+    outputs = save_outputs(df_chunks, output_dir=str(OUTPUT_DIR))
 
     print(df_chunks.head())
     print(outputs["section_terms"].head(20))
@@ -31,35 +51,25 @@ def main():
     print("\n=== Empty-ish clean text count (<5 words) ===")
     print((df_chunks["clean_text"].str.split().str.len() < 5).sum())
 
-    print("\n=== Top section terms ===")
-    for section in outputs["section_terms"]["section_label"].unique():
-        print(f"\n[{section}]")
-        print(
-            outputs["section_terms"]
-            .loc[outputs["section_terms"]["section_label"] == section, ["term", "tfidf_score"]]
-            .head(10)
-            .to_string(index=False)
-        )
+    print_top_terms(outputs["section_terms"], "section_label", "section")
+    print_top_terms(outputs["orientation_terms"], "orientation", "orientation")
+    print_top_terms(outputs["sdg_terms"], "sdg_labels", "SDG")
 
-    print("\n=== Top orientation terms ===")
-    for ori in outputs["orientation_terms"]["orientation"].unique():
-        print(f"\n[{ori}]")
-        print(
-            outputs["orientation_terms"]
-            .loc[outputs["orientation_terms"]["orientation"] == ori, ["term", "tfidf_score"]]
-            .head(10)
-            .to_string(index=False)
-        )
+    if run_audit:
+        print("\n=== Phase 1 Audit ===")
+        print_report(df_chunks)
 
-    print("\n=== Top SDG terms ===")
-    for sdg in outputs["sdg_terms"]["sdg_labels"].unique():
-        print(f"\n[{sdg}]")
-        print(
-            outputs["sdg_terms"]
-            .loc[outputs["sdg_terms"]["sdg_labels"] == sdg, ["term", "tfidf_score"]]
-            .head(10)
-            .to_string(index=False)
-        )
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--audit",
+        action="store_true",
+        help="Run the Phase 1 dataset audit after generating outputs.",
+    )
+    return parser.parse_args()
+
 
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    main(run_audit=args.audit)

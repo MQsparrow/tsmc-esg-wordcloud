@@ -6,8 +6,8 @@ import pandas as pd
 import streamlit as st
 
 # paths
-WORDCLOUD_IMG = Path("outputs/figures/tsmc_wordcloud.png")
-KEYWORD_FILE = Path("outputs/models/top_keywords.csv")
+WORDCLOUD_IMG = Path("outputs/legacy/figures/tsmc_wordcloud.png")
+KEYWORD_FILE = Path("outputs/legacy/models/top_keywords.csv")
 
 
 # page config
@@ -44,7 +44,7 @@ if KEYWORD_FILE.exists():
         mime="text/csv"
     )
 else:
-    st.warning("Keyword file not found. Run feature.py first.")
+    st.warning("Keyword file not found. Run `python main.py` and then `python src/feature.py`.")
 
 # --- Footer ---
 st.markdown("---")

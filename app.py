@@ -135,6 +135,8 @@ def load_data():
     for col in ["raw_text", "clean_text", "section_label", "orientation", "sdg_labels"]:
         if col in df_chunks.columns:
             df_chunks[col] = df_chunks[col].fillna("").astype(str)
+    if "sdg_confidence" in df_chunks.columns:
+        df_chunks["sdg_confidence"] = pd.to_numeric(df_chunks["sdg_confidence"], errors="coerce").fillna(0.0)
 
     return df_chunks, df_section, df_orientation, df_sdg
 
@@ -153,6 +155,24 @@ def prettify_label(x: str) -> str:
     if x in SDG_LABEL_MAP:
         return SDG_LABEL_MAP[x]
     return x.replace("_", " ").title()
+
+
+def parse_sdg_labels(label_text: str) -> list[str]:
+    if not label_text:
+        return []
+    return [label.strip() for label in str(label_text).split(",") if label.strip() and label.strip() != "unclassified"]
+
+
+def explode_sdg_chunks(df: pd.DataFrame) -> pd.DataFrame:
+    return (
+        df.assign(sdg_labels=df["sdg_labels"].map(parse_sdg_labels))
+        .explode("sdg_labels")
+        .dropna(subset=["sdg_labels"])
+    )
+
+
+def filter_chunks_by_sdg(df: pd.DataFrame, sdg: str) -> pd.DataFrame:
+    return df[df["sdg_labels"].map(parse_sdg_labels).map(lambda labels: sdg in labels)].copy()
 
 
 def make_wordcloud_from_tfidf(
@@ -220,10 +240,12 @@ def render_chunk_cards(df: pd.DataFrame, max_chunks: int = 5):
     for i, (_, row) in enumerate(view_df.head(max_chunks).iterrows(), start=1):
         label_section = prettify_label(row["section_label"])
         label_orientation = prettify_label(row["orientation"])
-        label_SDGs = ", ".join([prettify_label(s.strip()) for s in row.get("sdg_labels", "").split(",") if s.strip() and s.strip() != "unclassified"])
+        label_SDGs = ", ".join(prettify_label(label) for label in parse_sdg_labels(row.get("sdg_labels", "")))
+        confidence = float(row.get("sdg_confidence", 0.0))
+        confidence_text = f" | SDG confidence {confidence:.2f}" if confidence > 0 else ""
 
         with st.expander(
-            f"Chunk {i} | {label_section} | {label_orientation} | {label_SDGs}",
+            f"Chunk {i} | {label_section} | {label_orientation} | {label_SDGs}{confidence_text}",
             expanded=False
         ):
             st.write(row["raw_text"])
@@ -353,7 +375,7 @@ def filter_chunks_by_keyword(df: pd.DataFrame, keyword: str):
         return df.copy()
 
     kw = keyword.strip().lower()
-    return df[df["raw_text"].str.lower().str.contains(kw, na=False)].copy()
+    return df[df["raw_text"].str.lower().str.contains(kw, na=False, regex=False)].copy()
 
 
 # =========================
@@ -428,11 +450,8 @@ if page_mode == "Overview":
         st.info("**Action-oriented focus**  \n" + ", ".join(top_action))
 
     # Top 2 SDGs by chunk count
-    sdg_counts = (
-        df_chunks["sdg_labels"].str.split(",").explode().str.strip()
-        .loc[lambda s: s != "unclassified"]
-        .value_counts()
-    )
+    df_chunks_sdg_exploded = explode_sdg_chunks(df_chunks)
+    sdg_counts = df_chunks_sdg_exploded["sdg_labels"].value_counts()
     top2_sdgs = sdg_counts.head(2).index.tolist()
 
     sdg_focus_col1, sdg_focus_col2 = st.columns(2)
@@ -459,12 +478,6 @@ if page_mode == "Overview":
     with row1_col2:
         plot_distribution_bar(df_chunks, "orientation", "Orientation Distribution")
 
-    df_chunks_sdg_exploded = (
-        df_chunks.assign(sdg_labels=df_chunks["sdg_labels"].str.split(","))
-        .explode("sdg_labels")
-        .assign(sdg_labels=lambda d: d["sdg_labels"].str.strip())
-        .loc[lambda d: d["sdg_labels"] != "unclassified"]
-    )
     plot_distribution_bar(df_chunks_sdg_exploded, "sdg_labels", "SDG Distribution")
 
     st.markdown("### Cross-Section Theme Overlap")
@@ -600,9 +613,9 @@ else:
         for tab, sdg in zip(tabs, SDG_ORDER):
             with tab:
                 df_terms = df_sdg_tfidf[df_sdg_tfidf["sdg_labels"] == sdg].copy()
-                df_chunk_sdg = filtered_chunks[filtered_chunks["sdg_labels"].str.contains(sdg, na=False)].copy()
+                df_chunk_sdg = filter_chunks_by_sdg(filtered_chunks, sdg)
 
-                count_sdg = df_chunks["sdg_labels"].str.contains(sdg, na=False).sum()
+                count_sdg = len(filter_chunks_by_sdg(df_chunks, sdg))
                 st.subheader(f"{SDG_LABEL_MAP.get(sdg, sdg)} Analysis ({count_sdg} chunks)")
 
                 left, right = st.columns([1.2, 1])
