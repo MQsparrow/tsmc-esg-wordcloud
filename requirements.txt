@@ -4,9 +4,11 @@ matplotlib
 wordcloud
 plotly
 networkx
+pyvis
 spacy
 scikit-learn
 pdfplumber
 beautifulsoup4
 requests
 nltk
+streamlit-echarts

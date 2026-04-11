@@ -6,10 +6,21 @@ from pathlib import Path
 import networkx as nx
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
 import plotly.express as px
 import plotly.graph_objects as go
+
+try:
+    from pyvis.network import Network
+except ImportError:
+    Network = None
+
+try:
+    from streamlit_echarts import st_echarts
+except ImportError:
+    st_echarts = None
 
 
 # =========================
@@ -51,6 +62,8 @@ SECTION_ORDER = ["environment", "talent", "supply_chain", "social", "governance"
 ORIENTATION_ORDER = ["action_oriented", "people_centric", "mixed"]
 SDG_ORDER = ["SDG3_health", "SDG4_education", "SDG6_water", "SDG7_energy", "SDG8_labor", "SDG9_innovation", "SDG12_consumption", "SDG13_climate", "SDG17_partnership"]
 ISSUE_FRAME_ORDER = ["environment", "labor_talent", "supply_chain", "innovation", "governance_risk", "other"]
+PLOTLY_INTERACTIVE_CONFIG = {"scrollZoom": True, "displayModeBar": True}
+WORDCLOUD_COLORS = ["#0f766e", "#0891b2", "#2563eb", "#059669", "#0ea5e9", "#14b8a6"]
 
 SECTION_LABEL_MAP = {
     "environment": "Environment",
@@ -289,6 +302,73 @@ def plot_wordcloud(wc: WordCloud):
     st.pyplot(fig, use_container_width=True)
 
 
+def render_interactive_wordcloud(df: pd.DataFrame, top_k: int = 60):
+    if df.empty:
+        st.info("No terms available.")
+        return
+
+    if st_echarts is None:
+        wc = make_wordcloud_from_tfidf(df.head(80))
+        if wc:
+            plot_wordcloud(wc)
+        else:
+            st.info("No terms available.")
+        return
+
+    data = (
+        df.sort_values("tfidf_score", ascending=False)
+        .head(top_k)[["term", "tfidf_score"]]
+        .copy()
+    )
+    max_score = float(data["tfidf_score"].max()) if not data.empty else 1.0
+    min_score = float(data["tfidf_score"].min()) if not data.empty else 0.0
+    score_span = max(max_score - min_score, 1e-9)
+    word_data = [
+        {
+            "name": row["term"],
+            "value": round(28 + (float(row["tfidf_score"]) - min_score) * 92 / score_span, 2),
+            "textStyle": {"color": color},
+        }
+        for (_, row), color in zip(
+            data.iterrows(),
+            WORDCLOUD_COLORS * 20,
+        )
+    ]
+
+    options = {
+        "tooltip": {"show": True},
+        "series": [
+            {
+                "type": "wordCloud",
+                "shape": "circle",
+                "keepAspect": True,
+                "left": "center",
+                "top": "center",
+                "width": "100%",
+                "height": 420,
+                "sizeRange": [18, 72],
+                "rotationRange": [-45, 45],
+                "rotationStep": 15,
+                "gridSize": 10,
+                "drawOutOfBound": False,
+                "textStyle": {
+                    "fontFamily": "Arial",
+                    "fontWeight": "bold",
+                },
+                "emphasis": {
+                    "focus": "self",
+                    "textStyle": {
+                        "shadowBlur": 8,
+                        "shadowColor": "#94a3b8",
+                    },
+                },
+                "data": word_data,
+            }
+        ],
+    }
+    st_echarts(options=options, height="440px")
+
+
 def plot_top_terms(df: pd.DataFrame, title: str, top_k: int = 15):
     df_plot = df.sort_values("tfidf_score", ascending=False).head(top_k).copy()
 
@@ -305,7 +385,10 @@ def plot_top_terms(df: pd.DataFrame, title: str, top_k: int = 15):
         yaxis_title="Term",
         margin=dict(l=20, r=20, t=50, b=20)
     )
-    st.plotly_chart(fig, use_container_width=True)
+    fig.update_traces(
+        hovertemplate="Term: %{y}<br>TF-IDF: %{x:.4f}<extra></extra>"
+    )
+    st.plotly_chart(fig, use_container_width=True, config=PLOTLY_INTERACTIVE_CONFIG)
 
 
 def get_top_terms_table(df: pd.DataFrame, top_k: int = 20):
@@ -328,6 +411,22 @@ def get_top_terms_list(df: pd.DataFrame, top_k: int = 8) -> list[str]:
         .astype(str)
         .tolist()
     )
+
+
+def aggregate_terms_for_overview(*dfs: pd.DataFrame, top_k: int = 60) -> pd.DataFrame:
+    valid_frames = [df[["term", "tfidf_score"]].copy() for df in dfs if not df.empty]
+    if not valid_frames:
+        return pd.DataFrame(columns=["term", "tfidf_score"])
+
+    combined = pd.concat(valid_frames, ignore_index=True)
+    aggregated = (
+        combined.groupby("term", as_index=False)["tfidf_score"]
+        .mean()
+        .sort_values("tfidf_score", ascending=False)
+        .head(top_k)
+        .reset_index(drop=True)
+    )
+    return aggregated
 
 
 def chunk_match_count(raw_text: str, terms: list[str]) -> int:
@@ -435,7 +534,14 @@ def plot_heatmap(heatmap_df: pd.DataFrame, title: str):
         xaxis_title="",
         yaxis_title=""
     )
-    st.plotly_chart(fig, use_container_width=True)
+    fig.update_traces(
+        hovertemplate="X: %{x}<br>Y: %{y}<br>Value: %{z}<extra></extra>"
+    )
+    st.plotly_chart(
+        fig,
+        use_container_width=True,
+        config=PLOTLY_INTERACTIVE_CONFIG,
+    )
 
 
 def summarize_similarity_pairs(similarity_df: pd.DataFrame, top_n: int = 3, ascending: bool = False) -> pd.DataFrame:
@@ -470,21 +576,68 @@ def plot_distribution_bar(df: pd.DataFrame, col: str, title: str):
     counts = df[col].value_counts().reset_index()
     counts.columns = [col, "count"]
     counts[col] = counts[col].map(prettify_label)
+    counts = counts.sort_values("count", ascending=False).reset_index(drop=True)
 
     fig = px.bar(
         counts,
         x=col,
         y="count",
         title=title,
-        text="count"
+        text="count",
+        color="count",
+        color_continuous_scale="Tealgrn",
     )
     fig.update_layout(
         height=360,
         margin=dict(l=20, r=20, t=50, b=20),
         xaxis_title="",
-        yaxis_title="Count"
+        yaxis_title="Count",
+        coloraxis_showscale=False,
     )
-    st.plotly_chart(fig, use_container_width=True)
+    fig.update_traces(
+        hovertemplate="Label: %{x}<br>Count: %{y}<extra></extra>"
+    )
+    st.plotly_chart(
+        fig,
+        use_container_width=True,
+        config=PLOTLY_INTERACTIVE_CONFIG,
+    )
+
+
+def build_issue_frame_graph(network_df: pd.DataFrame) -> nx.Graph:
+    return nx.from_pandas_edgelist(
+        network_df,
+        source="term_a",
+        target="term_b",
+        edge_attr="weight",
+        create_using=nx.Graph(),
+    )
+
+
+def render_issue_frame_network_tables(graph: nx.Graph, network_df: pd.DataFrame) -> None:
+    weighted_degree = dict(graph.degree(weight="weight"))
+    degree_centrality = nx.degree_centrality(graph)
+
+    edge_table = network_df.sort_values("weight", ascending=False).copy()
+    edge_table["term_a"] = edge_table["term_a"].astype(str)
+    edge_table["term_b"] = edge_table["term_b"].astype(str)
+    st.caption("Top co-occurring keyword pairs within this issue frame.")
+    st.dataframe(edge_table.head(10), use_container_width=True, hide_index=True)
+
+    centrality_table = (
+        pd.DataFrame(
+            {
+                "term": list(graph.nodes()),
+                "connected_weight": [round(weighted_degree[node], 2) for node in graph.nodes()],
+                "degree_centrality": [round(degree_centrality[node], 3) for node in graph.nodes()],
+            }
+        )
+        .sort_values(["connected_weight", "degree_centrality"], ascending=False)
+        .head(10)
+        .reset_index(drop=True)
+    )
+    st.caption("Most central terms in this issue-frame network.")
+    st.dataframe(centrality_table, use_container_width=True, hide_index=True)
 
 
 def plot_issue_frame_cooccurrence_network(
@@ -497,13 +650,7 @@ def plot_issue_frame_cooccurrence_network(
         st.info("No co-occurrence edges available for this issue frame.")
         return
 
-    graph = nx.from_pandas_edgelist(
-        network_df,
-        source="term_a",
-        target="term_b",
-        edge_attr="weight",
-        create_using=nx.Graph(),
-    )
+    graph = build_issue_frame_graph(network_df)
     if graph.number_of_nodes() < 2:
         st.info("Not enough connected terms to render a network.")
         return
@@ -559,7 +706,7 @@ def plot_issue_frame_cooccurrence_network(
     nodes = sorted(graph.nodes())
     node_x = [positions[node][0] for node in nodes]
     node_y = [positions[node][1] for node in nodes]
-    node_sizes = [18 + (weighted_degree[node] * 2.5) for node in nodes]
+    node_sizes = [24 + (weighted_degree[node] * 3.0) for node in nodes]
     node_labels = [
         f"{node}<br>connected weight {weighted_degree[node]:.0f}<br>centrality {degree_centrality[node]:.2f}"
         for node in nodes
@@ -573,11 +720,12 @@ def plot_issue_frame_cooccurrence_network(
         textposition="top center",
         hovertext=node_labels,
         hovertemplate="%{hovertext}<extra></extra>",
+        textfont=dict(size=14, color="#0f172a", family="Arial Black, Arial, sans-serif"),
         marker=dict(
             size=node_sizes,
-            color="#0f766e",
-            line=dict(color="#134e4a", width=1.5),
-            opacity=0.9,
+            color="#a7f3d0",
+            line=dict(color="#0f766e", width=2),
+            opacity=0.98,
         ),
         showlegend=False,
     )
@@ -591,8 +739,148 @@ def plot_issue_frame_cooccurrence_network(
         yaxis=dict(visible=False),
         plot_bgcolor="white",
         paper_bgcolor="white",
+        dragmode="pan",
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(
+        fig,
+        use_container_width=True,
+        config={
+            "scrollZoom": True,
+            "displayModeBar": True,
+        },
+    )
+
+    edge_table = network_df.sort_values("weight", ascending=False).copy()
+    edge_table["term_a"] = edge_table["term_a"].astype(str)
+    edge_table["term_b"] = edge_table["term_b"].astype(str)
+    st.caption("Top co-occurring keyword pairs within this issue frame.")
+    st.dataframe(edge_table.head(10), use_container_width=True, hide_index=True)
+
+    centrality_table = (
+        pd.DataFrame(
+            {
+                "term": list(graph.nodes()),
+                "connected_weight": [round(weighted_degree[node], 2) for node in graph.nodes()],
+                "degree_centrality": [round(degree_centrality[node], 3) for node in graph.nodes()],
+            }
+        )
+        .sort_values(["connected_weight", "degree_centrality"], ascending=False)
+        .head(10)
+        .reset_index(drop=True)
+    )
+    st.caption("Most central terms in this issue-frame network.")
+    st.dataframe(centrality_table, use_container_width=True, hide_index=True)
+
+
+def render_draggable_issue_frame_network(
+    df_edges: pd.DataFrame,
+    issue_frame: str,
+    title: str,
+):
+    network_df = df_edges[df_edges["issue_frame"] == issue_frame].copy()
+    if network_df.empty:
+        st.info("No co-occurrence edges available for this issue frame.")
+        return
+
+    graph = build_issue_frame_graph(network_df)
+    if graph.number_of_nodes() < 2:
+        st.info("Not enough connected terms to render a network.")
+        return
+
+    if Network is None:
+        st.info("Install `pyvis` for draggable nodes. Showing the Plotly fallback for now.")
+        plot_issue_frame_cooccurrence_network(df_edges, issue_frame, title)
+        return
+
+    weighted_degree = dict(graph.degree(weight="weight"))
+    degree_centrality = nx.degree_centrality(graph)
+    max_weight = max(float(attrs.get("weight", 0.0)) for _, _, attrs in graph.edges(data=True))
+
+    net = Network(
+        height="620px",
+        width="100%",
+        bgcolor="#ffffff",
+        font_color="#0f172a",
+        notebook=False,
+    )
+    net.barnes_hut(
+        gravity=-2500,
+        central_gravity=0.2,
+        spring_length=180,
+        spring_strength=0.04,
+        damping=0.9,
+    )
+    net.set_options(
+        """
+        const options = {
+          "nodes": {
+            "shape": "dot",
+            "font": {
+              "size": 18,
+              "face": "Arial",
+              "color": "#0f172a",
+              "strokeWidth": 0
+            },
+            "borderWidth": 2,
+            "borderWidthSelected": 3
+          },
+          "edges": {
+            "color": {
+              "color": "#94a3b8",
+              "highlight": "#475569"
+            },
+            "smooth": {
+              "type": "dynamic"
+            }
+          },
+          "interaction": {
+            "hover": true,
+            "dragNodes": true,
+            "dragView": true,
+            "zoomView": true,
+            "navigationButtons": true
+          },
+          "physics": {
+            "enabled": true,
+            "stabilization": {
+              "iterations": 150
+            }
+          }
+        }
+        """
+    )
+
+    for node in graph.nodes():
+        connected_weight = float(weighted_degree[node])
+        centrality = float(degree_centrality[node])
+        net.add_node(
+            node,
+            label=node,
+            title=(
+                f"{node}<br>"
+                f"connected weight: {connected_weight:.0f}<br>"
+                f"centrality: {centrality:.2f}"
+            ),
+            size=16 + (connected_weight * 1.8),
+            color={
+                "background": "#a7f3d0",
+                "border": "#0f766e",
+                "highlight": {"background": "#d1fae5", "border": "#115e59"},
+            },
+        )
+
+    for term_a, term_b, attrs in graph.edges(data=True):
+        weight = float(attrs.get("weight", 0.0))
+        net.add_edge(
+            term_a,
+            term_b,
+            value=weight,
+            width=1.5 + (4.0 * weight / max_weight),
+            title=f"{term_a} ↔ {term_b} | weight {int(weight)}",
+        )
+
+    st.markdown(f"**{title}**")
+    components.html(net.generate_html(), height=640, scrolling=False)
 
     edge_table = network_df.sort_values("weight", ascending=False).copy()
     edge_table["term_a"] = edge_table["term_a"].astype(str)
@@ -772,6 +1060,16 @@ if page_mode == "Overview":
 
     plot_distribution_bar(df_chunks_sdg_exploded, "sdg_labels", "SDG Distribution")
 
+    st.markdown("### Overview Word Cloud")
+    overview_wordcloud_terms = aggregate_terms_for_overview(
+        df_section_tfidf,
+        df_orientation_tfidf,
+        df_sdg_tfidf,
+        top_k=70,
+    )
+    st.caption("Interactive overview cloud built from the strongest terms across sections, orientations, and SDGs.")
+    render_interactive_wordcloud(overview_wordcloud_terms, top_k=70)
+
     st.markdown("### Evidence Snapshot")
     overview_terms = df_orientation_tfidf[df_orientation_tfidf["orientation"] == "action_oriented"].copy()
     render_interpretation(
@@ -887,7 +1185,6 @@ if page_mode == "Overview":
             hide_index=True,
         )
 
-
 # =========================
 # Explorer Page
 # =========================
@@ -920,11 +1217,7 @@ else:
 
                 with left:
                     st.markdown("**Word Cloud**")
-                    wc = make_wordcloud_from_tfidf(df_terms.head(80))
-                    if wc:
-                        plot_wordcloud(wc)
-                    else:
-                        st.info("No terms available.")
+                    render_interactive_wordcloud(df_terms.head(80))
 
                 with right:
                     st.markdown("**Top Keywords**")
@@ -967,11 +1260,7 @@ else:
 
                 with left:
                     st.markdown("**Word Cloud**")
-                    wc = make_wordcloud_from_tfidf(df_terms.head(80))
-                    if wc:
-                        plot_wordcloud(wc)
-                    else:
-                        st.info("No terms available.")
+                    render_interactive_wordcloud(df_terms.head(80))
 
                 with right:
                     st.markdown("**Top Keywords**")
@@ -1014,11 +1303,7 @@ else:
 
                 with left:
                     st.markdown("**Word Cloud**")
-                    wc = make_wordcloud_from_tfidf(df_terms.head(80))
-                    if wc:
-                        plot_wordcloud(wc)
-                    else:
-                        st.info("No terms available.")
+                    render_interactive_wordcloud(df_terms.head(80))
 
                 with right:
                     st.markdown("**Top Keywords**")
@@ -1061,11 +1346,7 @@ else:
 
                 with left:
                     st.markdown("**Word Cloud**")
-                    wc = make_wordcloud_from_tfidf(df_terms.head(80))
-                    if wc:
-                        plot_wordcloud(wc)
-                    else:
-                        st.info("No terms available.")
+                    render_interactive_wordcloud(df_terms.head(80))
 
                 with right:
                     st.markdown("**Top Keywords**")
@@ -1086,7 +1367,7 @@ else:
                 st.caption(
                     "This network links high-signal terms that appear together inside the same chunks for this issue frame."
                 )
-                plot_issue_frame_cooccurrence_network(
+                render_draggable_issue_frame_network(
                     df_issue_frame_cooccurrence,
                     issue_frame=issue_frame,
                     title=f"Co-occurrence Network: {ISSUE_FRAME_LABEL_MAP.get(issue_frame, issue_frame)}",
