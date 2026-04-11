@@ -32,6 +32,9 @@ CHUNKS_PATH = OUTPUT_DIR / "chunks_processed.csv"
 SECTION_TFIDF_PATH = OUTPUT_DIR / "tfidf_by_section.csv"
 ORIENTATION_TFIDF_PATH = OUTPUT_DIR / "tfidf_by_orientation.csv"
 SDG_TFIDF_PATH = OUTPUT_DIR / "tfidf_by_sdg.csv"
+SECTION_SIMILARITY_PATH = OUTPUT_DIR / "similarity_by_section.csv"
+ORIENTATION_SIMILARITY_PATH = OUTPUT_DIR / "similarity_by_orientation.csv"
+SDG_SIMILARITY_PATH = OUTPUT_DIR / "similarity_by_sdg.csv"
 
 
 # =========================
@@ -145,6 +148,9 @@ def load_data():
     df_section = pd.read_csv(SECTION_TFIDF_PATH)
     df_orientation = pd.read_csv(ORIENTATION_TFIDF_PATH)
     df_sdg = pd.read_csv(SDG_TFIDF_PATH)
+    df_section_similarity = pd.read_csv(SECTION_SIMILARITY_PATH, index_col=0)
+    df_orientation_similarity = pd.read_csv(ORIENTATION_SIMILARITY_PATH, index_col=0)
+    df_sdg_similarity = pd.read_csv(SDG_SIMILARITY_PATH, index_col=0)
 
     for col in ["raw_text", "clean_text", "section_label", "orientation", "sdg_labels"]:
         if col in df_chunks.columns:
@@ -152,10 +158,26 @@ def load_data():
     if "sdg_confidence" in df_chunks.columns:
         df_chunks["sdg_confidence"] = pd.to_numeric(df_chunks["sdg_confidence"], errors="coerce").fillna(0.0)
 
-    return df_chunks, df_section, df_orientation, df_sdg
+    return (
+        df_chunks,
+        df_section,
+        df_orientation,
+        df_sdg,
+        df_section_similarity,
+        df_orientation_similarity,
+        df_sdg_similarity,
+    )
 
 
-df_chunks, df_section_tfidf, df_orientation_tfidf, df_sdg_tfidf = load_data()
+(
+    df_chunks,
+    df_section_tfidf,
+    df_orientation_tfidf,
+    df_sdg_tfidf,
+    df_section_similarity,
+    df_orientation_similarity,
+    df_sdg_similarity,
+) = load_data()
 
 
 # =========================
@@ -362,6 +384,34 @@ def plot_heatmap(heatmap_df: pd.DataFrame, title: str):
         yaxis_title=""
     )
     st.plotly_chart(fig, use_container_width=True)
+
+
+def summarize_similarity_pairs(similarity_df: pd.DataFrame, top_n: int = 3, ascending: bool = False) -> pd.DataFrame:
+    if similarity_df.empty:
+        return pd.DataFrame(columns=["group_a", "group_b", "similarity"])
+
+    records = []
+    labels = similarity_df.index.tolist()
+    for i, label_a in enumerate(labels):
+        for j, label_b in enumerate(labels):
+            if j <= i:
+                continue
+            records.append(
+                {
+                    "group_a": label_a,
+                    "group_b": label_b,
+                    "similarity": float(similarity_df.iloc[i, j]),
+                }
+            )
+
+    if not records:
+        return pd.DataFrame(columns=["group_a", "group_b", "similarity"])
+
+    out = pd.DataFrame(records).sort_values("similarity", ascending=ascending).head(top_n).copy()
+    out["group_a"] = out["group_a"].map(prettify_label)
+    out["group_b"] = out["group_b"].map(prettify_label)
+    out["similarity"] = out["similarity"].round(3)
+    return out.reset_index(drop=True)
 
 
 def plot_distribution_bar(df: pd.DataFrame, col: str, title: str):
@@ -575,6 +625,63 @@ if page_mode == "Overview":
         top_n=20
     )
     plot_heatmap(heatmap_sdg, "Top-Term Overlap Across SDGs")
+
+    st.markdown("### Cosine Similarity")
+    render_interpretation(
+        "Cosine Similarity",
+        "These heatmaps compare grouped language using TF-IDF vectors. Higher similarity means two categories rely on more similar vocabulary patterns overall.",
+    )
+
+    similarity_col1, similarity_col2 = st.columns(2)
+    with similarity_col1:
+        plot_heatmap(df_section_similarity, "Cosine Similarity Across ESG Sections")
+    with similarity_col2:
+        st.markdown("**Most similar section pairs**")
+        st.dataframe(
+            summarize_similarity_pairs(df_section_similarity, top_n=3, ascending=False),
+            use_container_width=True,
+            hide_index=True,
+        )
+        st.markdown("**Most distinct section pairs**")
+        st.dataframe(
+            summarize_similarity_pairs(df_section_similarity, top_n=3, ascending=True),
+            use_container_width=True,
+            hide_index=True,
+        )
+
+    similarity_col3, similarity_col4 = st.columns(2)
+    with similarity_col3:
+        plot_heatmap(df_orientation_similarity, "Cosine Similarity Across Orientations")
+    with similarity_col4:
+        st.markdown("**Most similar orientation pairs**")
+        st.dataframe(
+            summarize_similarity_pairs(df_orientation_similarity, top_n=3, ascending=False),
+            use_container_width=True,
+            hide_index=True,
+        )
+        st.markdown("**Most distinct orientation pairs**")
+        st.dataframe(
+            summarize_similarity_pairs(df_orientation_similarity, top_n=3, ascending=True),
+            use_container_width=True,
+            hide_index=True,
+        )
+
+    similarity_col5, similarity_col6 = st.columns(2)
+    with similarity_col5:
+        plot_heatmap(df_sdg_similarity, "Cosine Similarity Across SDGs")
+    with similarity_col6:
+        st.markdown("**Most similar SDG pairs**")
+        st.dataframe(
+            summarize_similarity_pairs(df_sdg_similarity, top_n=3, ascending=False),
+            use_container_width=True,
+            hide_index=True,
+        )
+        st.markdown("**Most distinct SDG pairs**")
+        st.dataframe(
+            summarize_similarity_pairs(df_sdg_similarity, top_n=3, ascending=True),
+            use_container_width=True,
+            hide_index=True,
+        )
 
 
 # =========================

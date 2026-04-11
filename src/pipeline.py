@@ -10,6 +10,7 @@ from typing import List, Dict, Tuple
 import pandas as pd
 import spacy
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 
 # =========================
@@ -667,6 +668,42 @@ def extract_top_terms_per_group(
     return pd.DataFrame(records)
 
 
+def build_cosine_similarity_by_group(
+    df: pd.DataFrame,
+    group_col: str,
+    text_col: str = "clean_text",
+    min_df: int = 2,
+    ngram_range: Tuple[int, int] = (1, 2),
+) -> pd.DataFrame:
+    grouped = (
+        df.groupby(group_col)[text_col]
+        .apply(lambda x: " ".join(x.astype(str)))
+        .reset_index()
+    )
+
+    if grouped.empty:
+        return pd.DataFrame()
+
+    num_docs = len(grouped)
+    if num_docs < min_df:
+        min_df = 1
+    max_df_val = 0.9 if num_docs > 1 else 1.0
+
+    vectorizer = TfidfVectorizer(
+        min_df=min_df,
+        max_df=max_df_val,
+        ngram_range=ngram_range,
+    )
+    matrix = vectorizer.fit_transform(grouped[text_col])
+    similarity = cosine_similarity(matrix)
+
+    return pd.DataFrame(
+        similarity,
+        index=grouped[group_col].tolist(),
+        columns=grouped[group_col].tolist(),
+    )
+
+
 # =========================
 # 8. FULL PIPELINE
 # =========================
@@ -738,6 +775,10 @@ def save_outputs(
         df_chunks, group_col="orientation", top_k=30
     )
     df_orientation_terms.to_csv(output_path / "tfidf_by_orientation.csv", index=False)
+    similarity_section = build_cosine_similarity_by_group(df_chunks, group_col="section_label")
+    similarity_section.to_csv(output_path / "similarity_by_section.csv", index=True)
+    similarity_orientation = build_cosine_similarity_by_group(df_chunks, group_col="orientation")
+    similarity_orientation.to_csv(output_path / "similarity_by_orientation.csv", index=True)
 
     # top terms by SDG (explode multi-labels so each chunk contributes to all its SDGs)
     df_exploded = (
@@ -750,10 +791,15 @@ def save_outputs(
         df_exploded, group_col="sdg_labels", top_k=30
     )
     df_sdg_terms.to_csv(output_path / "tfidf_by_sdg.csv", index=False)
+    similarity_sdg = build_cosine_similarity_by_group(df_exploded, group_col="sdg_labels")
+    similarity_sdg.to_csv(output_path / "similarity_by_sdg.csv", index=True)
 
     return {
         "chunks": df_chunks,
         "section_terms": df_section_terms,
         "orientation_terms": df_orientation_terms,
         "sdg_terms": df_sdg_terms,
+        "section_similarity": similarity_section,
+        "orientation_similarity": similarity_orientation,
+        "sdg_similarity": similarity_sdg,
     }
