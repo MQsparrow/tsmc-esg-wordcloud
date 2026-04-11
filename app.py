@@ -23,6 +23,484 @@ except ImportError:
     st_echarts = None
 
 
+px.defaults.template = "plotly_white"
+px.defaults.color_continuous_scale = px.colors.sequential.Tealgrn
+px.defaults.color_discrete_sequence = ["#0f766e", "#0ea5a4", "#2563eb", "#0891b2", "#1d4ed8"]
+
+
+def inject_custom_styles() -> None:
+    st.markdown(
+        """
+        <style>
+        .block-container {
+            padding-top: 2rem;
+            padding-bottom: 3rem;
+            max-width: 1180px;
+        }
+        .app-shell {
+            background:
+                radial-gradient(circle at top left, rgba(20,184,166,0.10), transparent 28%),
+                radial-gradient(circle at top right, rgba(37,99,235,0.10), transparent 24%),
+                linear-gradient(180deg, #f8fffe 0%, #ffffff 35%, #f7fafc 100%);
+            border: 1px solid rgba(15,118,110,0.08);
+            border-radius: 24px;
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.06);
+        }
+        .page-kicker {
+            color: #0f766e;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 0.45rem;
+        }
+        .page-title {
+            color: #0f172a;
+            font-size: 2.25rem;
+            line-height: 1.05;
+            font-weight: 800;
+            margin: 0 0 0.6rem 0;
+        }
+        .page-subtitle {
+            color: #334155;
+            font-size: 1rem;
+            line-height: 1.7;
+            max-width: 780px;
+            margin: 0;
+        }
+        .soft-card {
+            background: rgba(255,255,255,0.9);
+            border: 1px solid rgba(148, 163, 184, 0.20);
+            border-radius: 18px;
+            padding: 1rem;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+            min-height: 210px;
+        }
+        .soft-card h4, .highlight-card h4 {
+            color: #0f172a;
+            margin: 0 0 0.4rem 0;
+            font-size: 1rem;
+        }
+        .soft-card p, .highlight-card p {
+            color: #475569;
+            margin: 0;
+            line-height: 1.65;
+            font-size: 0.95rem;
+        }
+        .highlight-card {
+            background: linear-gradient(145deg, #ecfeff 0%, #f8fafc 100%);
+            border: 1px solid rgba(14, 165, 164, 0.18);
+            border-radius: 18px;
+            padding: 1rem;
+            min-height: 210px;
+        }
+        .mini-kicker {
+            color: #0f766e;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.3rem;
+        }
+        .section-note {
+            color: #64748b;
+            font-size: 0.94rem;
+            margin-top: -0.45rem;
+            margin-bottom: 1rem;
+        }
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr));
+            gap: 1.1rem;
+            margin: 0.5rem 0 1.2rem 0;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.88);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 18px;
+            padding: 1rem 1rem 0.95rem 1rem;
+            min-height: 132px;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+        }
+        .stat-card .label {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 0.55rem;
+            font-weight: 600;
+        }
+        .stat-card .value {
+            color: #0f172a;
+            font-size: 2.45rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 0.35rem;
+        }
+        .stat-card .note {
+            color: #64748b;
+            font-size: 0.88rem;
+            line-height: 1.5;
+        }
+        .flow-band {
+            background: rgba(255,255,255,0.86);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 18px;
+            padding: 0.9rem 1rem;
+            margin: 0.65rem 0 1.2rem 0;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+            overflow-x: auto;
+        }
+        .flow-band code {
+            color: #0f766e;
+            font-size: 1.02rem;
+            white-space: nowrap;
+        }
+        .tight-section {
+            margin-top: 0.4rem;
+            margin-bottom: 0.9rem;
+        }
+        [data-testid="stAlert"] {
+            border-radius: 18px;
+            border: 1px solid rgba(148, 163, 184, 0.20);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+        }
+        [data-testid="stTabs"] [role="tablist"] {
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.75);
+            padding: 0.35rem;
+            border-radius: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+        }
+        [data-testid="stTabs"] [role="tab"] {
+            border-radius: 10px;
+            padding: 0.45rem 0.9rem;
+            color: #475569;
+        }
+        [data-testid="stTabs"] [aria-selected="true"] {
+            background: linear-gradient(135deg, #0f766e 0%, #0ea5a4 100%);
+            color: white;
+        }
+        .streamlit-expanderHeader {
+            font-weight: 700;
+            color: #0f172a;
+        }
+        [data-testid="stExpander"] summary p {
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+        [data-testid="stExpander"] {
+            border-radius: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            overflow: hidden;
+        }
+        [data-testid="stExpander"] div[role="region"] {
+            min-height: 250px;
+        }
+        [data-testid="stDataFrame"] {
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .reveal-ready {
+            opacity: 0;
+            transform: translateY(16px);
+            transition: opacity 0.45s ease, transform 0.45s ease;
+        }
+        .reveal-ready.reveal-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        [data-testid="stMetricValue"] {
+            color: #0f172a;
+            font-weight: 800;
+        }
+        [data-testid="stMetricLabel"] {
+            color: #475569;
+            font-weight: 600;
+        }
+        [data-testid="stSidebar"] {
+            background: linear-gradient(180deg, #f8fafc 0%, #eff6ff 100%);
+        }
+        @media (max-width: 768px) {
+            .block-container {
+                padding-top: 1rem;
+                padding-left: 1rem;
+                padding-right: 1rem;
+                max-width: 100%;
+            }
+            .app-shell {
+                padding: 1.15rem 1rem;
+                border-radius: 18px;
+            }
+            .page-title {
+                font-size: 1.7rem;
+            }
+            .page-subtitle {
+                font-size: 0.95rem;
+                line-height: 1.6;
+            }
+            .soft-card, .highlight-card {
+                min-height: auto;
+                padding: 0.95rem;
+            }
+            .stat-card {
+                min-height: auto;
+                padding: 0.9rem;
+            }
+            .stat-card .value {
+                font-size: 2rem;
+            }
+            .flow-band {
+                padding: 0.8rem 0.9rem;
+            }
+            .flow-band code {
+                font-size: 0.92rem;
+            }
+            [data-testid="stExpander"] div[role="region"] {
+                min-height: auto;
+            }
+            [data-testid="stPlotlyChart"] {
+                margin-bottom: 0.35rem;
+            }
+            [data-testid="stSidebar"] {
+                min-width: 82vw !important;
+                max-width: 82vw !important;
+            }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_page_header(kicker: str, title: str, subtitle: str) -> None:
+    st.markdown(
+        f"""
+        <div class="app-shell">
+            <div class="page-kicker">{kicker}</div>
+            <div class="page-title">{title}</div>
+            <p class="page-subtitle">{subtitle}</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_text_card(title: str, text: str, highlight: bool = False) -> None:
+    card_class = "highlight-card" if highlight else "soft-card"
+    st.markdown(
+        f"""
+        <div class="{card_class}">
+            <h4>{title}</h4>
+            <p>{text}</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_kicker_card(kicker: str, title: str, text: str, highlight: bool = False) -> None:
+    card_class = "highlight-card" if highlight else "soft-card"
+    st.markdown(
+        f"""
+        <div class="{card_class}">
+            <div class="mini-kicker">{kicker}</div>
+            <h4>{title}</h4>
+            <p>{text}</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_card_grid(cards: list[dict], columns: int = 2) -> None:
+    for start in range(0, len(cards), columns):
+        row_cards = cards[start:start + columns]
+        cols = st.columns(columns)
+        for col, card in zip(cols, row_cards):
+            with col:
+                if card.get("kicker"):
+                    render_kicker_card(
+                        kicker=card["kicker"],
+                        title=card["title"],
+                        text=card["text"],
+                        highlight=card.get("highlight", False),
+                    )
+                else:
+                    render_text_card(
+                        title=card["title"],
+                        text=card["text"],
+                        highlight=card.get("highlight", False),
+                    )
+        if len(row_cards) < columns:
+            for col in cols[len(row_cards):]:
+                with col:
+                    st.empty()
+
+
+def render_metric_grid(metrics: list[dict], columns: int = 4) -> None:
+    for start in range(0, len(metrics), columns):
+        row_metrics = metrics[start:start + columns]
+        cols = st.columns(columns)
+        for col, metric in zip(cols, row_metrics):
+            note = f'<div class="note">{metric["note"]}</div>' if metric.get("note") else ""
+            with col:
+                st.markdown(
+                    f"""
+                    <div class="stat-card">
+                        <div class="label">{metric['label']}</div>
+                        <div class="value stat-value" data-target="{metric['value']}">{metric['value']}</div>
+                        {note}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+        if len(row_metrics) < columns:
+            for col in cols[len(row_metrics):]:
+                with col:
+                    st.empty()
+
+
+# def render_flow_band(text: str) -> None:
+#     st.markdown(
+#         f'<div class="flow-band"><code>{text}</code></div>',
+#         unsafe_allow_html=True,
+#     )
+
+def render_flow_band(flow_string):
+    steps = [step.strip() for step in flow_string.split("->")]
+    
+    st.markdown("""
+        <style>
+        .flow-container {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 15px;
+            background-color: #f8f9fb;
+            border-radius: 8px;
+        }
+        .flow-step {
+            background: #e0f2f1;
+            color: #00796b;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 1.5rem;
+            border: 1px solid #b2dfdb;
+        }
+        .flow-arrow {
+            color: #999;
+            font-weight: bold;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # 生成帶有箭頭的 HTML
+    flow_html = '<div class="flow-container">'
+    for i, step in enumerate(steps):
+        flow_html += f'<div class="flow-step">{step}</div>'
+        if i < len(steps) - 1:
+            flow_html += '<span class="flow-arrow">→</span>'
+    flow_html += '</div>'
+    
+    st.markdown(flow_html, unsafe_allow_html=True)
+
+def inject_motion_script() -> None:
+    components.html(
+        """
+        <script>
+        const isMobile = () => window.parent.innerWidth <= 768;
+        const selectors = [
+          '.app-shell',
+          '.soft-card',
+          '.highlight-card',
+          '.stat-card',
+          '[data-testid="stMetric"]',
+          '[data-testid="stPlotlyChart"]',
+          '[data-testid="stExpander"]',
+          '[data-testid="stDataFrame"]'
+        ];
+
+        function markRevealTargets() {
+          selectors.forEach((selector) => {
+            window.parent.document.querySelectorAll(selector).forEach((el) => {
+              if (!el.classList.contains('reveal-ready')) {
+                el.classList.add('reveal-ready');
+              }
+            });
+          });
+        }
+
+        function observeRevealTargets() {
+          const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('reveal-visible');
+              }
+            });
+          }, { threshold: 0.08 });
+
+          window.parent.document.querySelectorAll('.reveal-ready').forEach((el) => observer.observe(el));
+        }
+
+        function animateStatValues() {
+          window.parent.document.querySelectorAll('.stat-value').forEach((el) => {
+            if (el.dataset.animated === 'true') return;
+            const target = Number(el.dataset.target || el.textContent || 0);
+            if (!Number.isFinite(target)) return;
+            el.dataset.animated = 'true';
+            const duration = 700;
+            const start = performance.now();
+
+            function tick(now) {
+              const progress = Math.min((now - start) / duration, 1);
+              const eased = 1 - Math.pow(1 - progress, 3);
+              el.textContent = Math.round(target * eased).toString();
+              if (progress < 1) requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+          });
+        }
+
+        function attachCardTilt() {
+          if (isMobile()) return;
+          window.parent.document.querySelectorAll('.soft-card, .highlight-card, .stat-card').forEach((card) => {
+            if (card.dataset.tiltAttached === 'true') return;
+            card.dataset.tiltAttached = 'true';
+            card.style.transition = 'transform 0.2s ease, box-shadow 0.2s ease';
+
+            card.addEventListener('mousemove', (event) => {
+              const rect = card.getBoundingClientRect();
+              const x = event.clientX - rect.left;
+              const y = event.clientY - rect.top;
+              const rotateY = ((x / rect.width) - 0.5) * 5;
+              const rotateX = ((0.5 - y / rect.height)) * 5;
+              card.style.transform = `perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-2px)`;
+              card.style.boxShadow = '0 18px 36px rgba(15, 23, 42, 0.10)';
+            });
+
+            card.addEventListener('mouseleave', () => {
+              card.style.transform = '';
+              card.style.boxShadow = '';
+            });
+          });
+        }
+
+        setTimeout(() => {
+          markRevealTargets();
+          observeRevealTargets();
+          animateStatValues();
+          attachCardTilt();
+        }, 120);
+        </script>
+        """,
+        height=0,
+    )
+
+
 # =========================
 # Page config
 # =========================
@@ -32,8 +510,13 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("TSMC Sustainability Direction Analysis")
-st.caption("Interactive dashboard for section-based and orientation-based ESG language analysis")
+inject_custom_styles()
+render_page_header(
+    "TSMC ESG Text Mining",
+    "TSMC Sustainability Direction Analysis",
+    "An interactive dashboard for section-level ESG language, narrative framing, SDG themes, and issue-driven interpretation.",
+)
+inject_motion_script()
 
 
 # =========================
@@ -377,13 +860,17 @@ def plot_top_terms(df: pd.DataFrame, title: str, top_k: int = 15):
         x="tfidf_score",
         y="term",
         orientation="h",
-        title=title
+        title=title,
+        color="tfidf_score",
     )
     fig.update_layout(
         height=500,
         xaxis_title="TF-IDF Score",
         yaxis_title="Term",
-        margin=dict(l=20, r=20, t=50, b=20)
+        margin=dict(l=20, r=20, t=50, b=20),
+        coloraxis_showscale=False,
+        plot_bgcolor="rgba(255,255,255,0.92)",
+        paper_bgcolor="rgba(255,255,255,0.0)",
     )
     fig.update_traces(
         hovertemplate="Term: %{y}<br>TF-IDF: %{x:.4f}<extra></extra>"
@@ -532,7 +1019,9 @@ def plot_heatmap(heatmap_df: pd.DataFrame, title: str):
         height=480,
         margin=dict(l=20, r=20, t=60, b=20),
         xaxis_title="",
-        yaxis_title=""
+        yaxis_title="",
+        plot_bgcolor="rgba(255,255,255,0.92)",
+        paper_bgcolor="rgba(255,255,255,0.0)",
     )
     fig.update_traces(
         hovertemplate="X: %{x}<br>Y: %{y}<br>Value: %{z}<extra></extra>"
@@ -593,6 +1082,8 @@ def plot_distribution_bar(df: pd.DataFrame, col: str, title: str):
         xaxis_title="",
         yaxis_title="Count",
         coloraxis_showscale=False,
+        plot_bgcolor="rgba(255,255,255,0.92)",
+        paper_bgcolor="rgba(255,255,255,0.0)",
     )
     fig.update_traces(
         hovertemplate="Label: %{x}<br>Count: %{y}<extra></extra>"
@@ -965,13 +1456,15 @@ st.sidebar.header("Controls")
 
 page_mode = st.sidebar.selectbox(
     "Page",
-    ["Overview", "Explorer"]
+    ["Project Overview", "Methods", "Dashboard", "Explorer"]
 )
 
-view_mode = st.sidebar.radio(
-    "Explorer mode",
-    ["Section view", "Orientation view", "SDG view", "Issue Frame view"]
-)
+view_mode = None
+if page_mode == "Explorer":
+    view_mode = st.sidebar.radio(
+        "Explorer mode",
+        ["Section view", "Orientation view", "SDG view", "Issue Frame view"]
+    )
 
 top_k = st.sidebar.slider("Top keywords", min_value=10, max_value=30, value=15, step=5)
 show_chunks = st.sidebar.checkbox("Show example chunks", value=True)
@@ -984,22 +1477,171 @@ filtered_chunks = filter_chunks_by_keyword(df_chunks, keyword_search)
 
 
 # =========================
-# Overview Page
+# Top-level Pages
 # =========================
-if page_mode == "Overview":
+if page_mode == "Project Overview":
+    render_page_header(
+        "Presentation",
+        "Project Overview",
+        "A fast, presentation-first view of what the project does, why it matters, and which findings make it compelling.",
+    )
+
+    render_card_grid(
+        [
+            {
+                "title": "What This Project Does",
+                "text": "This project turns TSMC's 2024 sustainability report into an interactive text-mining dashboard. Instead of only counting words, it shows how ESG language shifts across report sections, narrative orientation, SDG themes, and issue frames. The goal is a system that is explainable, presentation-ready, and easy to defend in class.",
+                "highlight": True,
+            },
+            {
+                "title": "Why It Stands Out",
+                "text": "The pipeline is reproducible from raw text to dashboard outputs. The analysis goes beyond basic TF-IDF by adding cosine similarity, issue framing, and co-occurrence networks. The interface supports both quick presentation views and deeper exploration.",
+            },
+        ],
+        columns=2,
+    )
+    st.markdown("")
+
+    render_metric_grid(
+        [
+            {"label": "Processed Chunks", "value": len(df_chunks)},
+            {
+                "label": "SDG Themes",
+                "value": df_chunks["sdg_labels"].str.split(",").explode().str.strip().pipe(lambda s: s[s != "unclassified"]).nunique(),
+            },
+            {"label": "Issue Frames", "value": df_chunks["issue_frame"].nunique()},
+            {"label": "Analysis Views", "value": 4},
+        ],
+        columns=4,
+    )
+
+    st.markdown("### What We Built")
+    built_col1, built_col2, built_col3 = st.columns(3)
+    with built_col1:
+        render_text_card("Pipeline", "PDF cleanup, chunking, spaCy preprocessing, section and SDG labeling, issue framing, and rerunnable exports.")
+    with built_col2:
+        render_text_card("Analysis Layer", "TF-IDF, overlap heatmaps, cosine similarity, representative evidence chunks, and keyword co-occurrence.")
+    with built_col3:
+        render_text_card("Interface", "Presentation overview, methods explanation, dashboard summary, and a multi-view explorer for deep dives.")
+
+    st.markdown("### Headline Findings")
+    render_hero_summary()
+
+    findings_col1, findings_col2 = st.columns(2)
+    with findings_col1:
+        top_issue_frame = df_issue_frame_distribution.sort_values("count", ascending=False).iloc[0]
+        render_kicker_card(
+            "Finding",
+            f"Dominant issue frame: {prettify_label(top_issue_frame['issue_frame'])}",
+            f"{int(top_issue_frame['count'])} chunks, {top_issue_frame['share'] * 100:.1f}% share. This helps explain which strategic problem space dominates the report.",
+            highlight=True,
+        )
+    with findings_col2:
+        top_section = df_chunks["section_label"].value_counts().idxmax()
+        render_kicker_card(
+            "Finding",
+            f"Largest section label: {prettify_label(top_section)}",
+            f"{int(df_chunks['section_label'].value_counts().max())} chunks. This gives a quick read on where the report devotes the most language.",
+        )
+
+    st.markdown("### Signature Visual")
+    overview_wordcloud_terms = aggregate_terms_for_overview(
+        df_section_tfidf,
+        df_orientation_tfidf,
+        df_sdg_tfidf,
+        top_k=70,
+    )
+    render_interactive_wordcloud(overview_wordcloud_terms, top_k=70)
+
+elif page_mode == "Methods":
+    render_page_header(
+        "Methods",
+        "How The Pipeline Works",
+        "A concise walkthrough of how raw report text becomes a cleaned, labeled, and interpretable dashboard.",
+    )
+
+    st.markdown("### Pipeline Flow")
+    render_flow_band("PDF/Text Extraction -> Cleanup -> Chunking -> spaCy Preprocessing -> Rule-based Labels -> TF-IDF & Similarity -> Dashboard")
+    
+    st.markdown("""
+    <style>
+    [data-testid="column"] {
+        padding: 15px; /* 增加列內部的填充 */
+    }
+    .stMarkdown {
+        margin-bottom: 20px; /* 增加每張卡片下方的距離 */
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    render_card_grid(
+        [
+            {
+                "title": "Data Preparation",
+                "text": "We clean PDF-specific noise, remove repeated headers and boilerplate, then split the report into semantically cleaner chunks. After chunking, spaCy handles normalization, lemmatization, stopword removal, and POS filtering.",
+                "highlight": True,
+            },
+            {
+                "title": "Analysis",
+                "text": "We aggregate grouped text with TF-IDF to surface distinctive vocabulary across sections, orientations, SDGs, and issue frames. We also compare grouped language with cosine similarity and trace issue-frame keyword relationships through co-occurrence networks.",
+                "highlight": True,
+            },
+            {
+                "title": "Labeling",
+                "text": "Each chunk receives section, orientation, SDG, and issue-frame labels using transparent rule-based logic. SDG assignment uses stronger thresholds, a dominance rule, and confidence scores to reduce noisy multi-labeling.",
+            
+            },
+            {
+                "title": "Validation",
+                "text": "The pipeline includes an audit layer that checks duplicates, short chunks, repeated first-line patterns, and SDG label counts. This makes the output more reproducible and easier to defend during presentation.",
+            },
+        ],
+        columns=2,
+    )
+    st.markdown("")
+
+    st.markdown("### Methods by Outcome")
+    render_card_grid(
+        [
+            {
+                "title": "Interpretability",
+                "text": "Representative chunks, issue frames, and SDG confidence scores support evidence-based explanation.",
+                "kicker": "Outcome",
+            },
+            {
+                "title": "Comparability",
+                "text": "TF-IDF, overlap heatmaps, and cosine similarity show where categories align or differ in language.",
+                "kicker": "Outcome",
+            },
+            {
+                "title": "Presentation Value",
+                "text": "Interactive views make the analysis easier to navigate quickly in a live demo.",
+                "kicker": "Outcome",
+                "highlight": True,
+            },
+        ],
+        columns=3,
+    )
+
+elif page_mode == "Dashboard":
     render_hero_summary()
     st.markdown("")
 
-    c1, c2, c3, c4, c5 = st.columns(5)
-    c1.metric("Total Chunks", len(df_chunks))
-    c2.metric("Sections", df_chunks["section_label"].nunique())
-    c3.metric("Orientations", df_chunks["orientation"].nunique())
-    c4.metric("SDG Themes", df_chunks["sdg_labels"].str.split(",").explode().str.strip().pipe(lambda s: s[s != "unclassified"]).nunique())
-    c5.metric("Filtered Chunks", len(filtered_chunks))
+    render_metric_grid(
+        [
+            {"label": "Total Chunks", "value": len(df_chunks)},
+            {"label": "Sections", "value": df_chunks["section_label"].nunique()},
+            {"label": "Orientations", "value": df_chunks["orientation"].nunique()},
+            {
+                "label": "SDG Themes",
+                "value": df_chunks["sdg_labels"].str.split(",").explode().str.strip().pipe(lambda s: s[s != "unclassified"]).nunique(),
+            },
+            {"label": "Filtered Chunks", "value": len(filtered_chunks)},
+        ],
+        columns=5,
+    )
 
     st.markdown("### Quick Insights")
-
-    insight_col1, insight_col2, insight_col3 = st.columns(3)
 
     top_env = (
         df_section_tfidf[df_section_tfidf["section_label"] == "environment"]
@@ -1020,45 +1662,74 @@ if page_mode == "Overview":
         .tolist()
     )
 
-    with insight_col1:
-        st.info("**Environment focus**  \n" + ", ".join(top_env))
+    render_card_grid(
+        [
+            {"kicker": "Section", "title": "Environment Focus", "text": ", ".join(top_env), "highlight": True},
+            {"kicker": "Section", "title": "Talent Focus", "text": ", ".join(top_talent)},
+            {"kicker": "Orientation", "title": "Action-Oriented Focus", "text": ", ".join(top_action)},
+        ],
+        columns=3,
+    )
+    # st.markdown("")
+    st.markdown("""
+        <style>
+        /* 1. 處理標題：強制不換行，解決「肩膀」不齊的問題 */
+        [data-testid="stExpander"] summary p {
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
 
-    with insight_col2:
-        st.info("**Talent focus**  \n" + ", ".join(top_talent))
+        /* 2. 處理內容：只在「展開」時設定最小高度 */
+        /* st.expander 展開時，內層 div 會出現，我們針對它設定高度 */
+        [data-testid="stExpander"] div[role="region"] {
+            min-height: 250px; /* 這裡設定你希望展開後對齊的高度 */
+        }
 
-    with insight_col3:
-        st.info("**Action-oriented focus**  \n" + ", ".join(top_action))
+        /* 3. 處理外殼：收起來時讓它回歸自然高度 */
+        [data-testid="stExpander"] {
+            height: auto !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
 
     # Top 2 SDGs by chunk count
     df_chunks_sdg_exploded = explode_sdg_chunks(df_chunks)
     sdg_counts = df_chunks_sdg_exploded["sdg_labels"].value_counts()
     top2_sdgs = sdg_counts.head(2).index.tolist()
 
+    # 修改後的結構
     sdg_focus_col1, sdg_focus_col2 = st.columns(2)
-    for col, sdg in zip([sdg_focus_col1, sdg_focus_col2], top2_sdgs):
-        top_terms = (
-            df_sdg_tfidf[df_sdg_tfidf["sdg_labels"] == sdg]
-            .sort_values("tfidf_score", ascending=False)
-            .head(3)["term"]
-            .tolist()
-        )
-        label = SDG_LABEL_MAP.get(sdg, sdg)
-        count = int(sdg_counts.get(sdg, 0))
-        narrative = SDG_NARRATIVE.get(sdg, "")
+
+    # 定義要處理的數據
+    data_map = [
+        (sdg_focus_col1, top2_sdgs[0], "section_label", "Section Distribution"),
+        (sdg_focus_col2, top2_sdgs[1], "orientation", "Orientation Distribution")
+    ]
+
+    for col, sdg, feat, title in data_map:
         with col:
-            with st.expander(f"**{label} focus** — {', '.join(top_terms)} ({count} chunks)"):
+            # 1. 先渲染上方的 Expander
+            top_terms = (
+                df_sdg_tfidf[df_sdg_tfidf["sdg_labels"] == sdg]
+                .sort_values("tfidf_score", ascending=False)
+                .head(3)["term"]
+                .tolist()
+            )
+            label = SDG_LABEL_MAP.get(sdg, sdg)
+            count = int(sdg_counts.get(sdg, 0))
+            narrative = SDG_NARRATIVE.get(sdg, "")
+            
+            with st.expander(f"**{label} focus** — {', '.join(top_terms)} ({count} chunks)", expanded=True):
                 if narrative:
                     st.markdown(narrative)
+            
+            # 2. 直接在同一個 col 下方渲染圖表，這樣它們的「寬度」會完全對齊
+            plot_distribution_bar(df_chunks, feat, title)
 
-    row1_col1, row1_col2 = st.columns(2)
-
-    with row1_col1:
-        plot_distribution_bar(df_chunks, "section_label", "Section Distribution")
-
-    with row1_col2:
-        plot_distribution_bar(df_chunks, "orientation", "Orientation Distribution")
-
+    # 底部的大圖表維持不變
     plot_distribution_bar(df_chunks_sdg_exploded, "sdg_labels", "SDG Distribution")
+
 
     st.markdown("### Overview Word Cloud")
     overview_wordcloud_terms = aggregate_terms_for_overview(
@@ -1185,9 +1856,6 @@ if page_mode == "Overview":
             hide_index=True,
         )
 
-# =========================
-# Explorer Page
-# =========================
 else:
     st.markdown("## Explorer")
     st.caption("Browse ESG language by section or by narrative orientation.")
