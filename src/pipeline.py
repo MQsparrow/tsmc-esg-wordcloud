@@ -34,6 +34,9 @@ CUSTOM_STOPWORDS = {
     "secret", "manager", "opera", "chairperson", "engineer",
     "wet", "nature", "ton", "metric ton", "scrubber",
 
+    # TSMC / semiconductor industry — too obvious to be informative
+    "fab", "semiconductor",
+
     # contact / address noise from PDF appendix
     "tel", "fax", "hsinchu", "science park", "eda", "iw",
     "currently serve", "currently serves",

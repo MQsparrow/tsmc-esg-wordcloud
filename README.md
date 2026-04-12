@@ -1,169 +1,78 @@
-# TSMC ESG Word Cloud Dashboard
+# Decoding TSMC's Sustainability Language
 
-An interactive text mining project analyzing sustainability communication in ESG reports, focusing on how language differs across domains and narrative styles.
+A text-mining dashboard that reveals how TSMC frames ESG topics across Strategic Framing and UN SDG themes.
 
 ---
 
 ## Overview
 
-This project explores how ESG (Environmental, Social, Governance) themes are communicated in corporate sustainability reports.
+This project turns TSMC's 2024 sustainability report (200+ pages) into an interactive text-mining dashboard. Instead of reading the full report, we parse its language computationally — mapping vocabulary patterns to two universal frameworks:
 
-Using text mining techniques, we transform unstructured report text into an interactive dashboard that reveals:
+* **Strategic Framing** — how the report distributes language across ESG sections (Environment, Talent, Supply Chain, Social, Governance)
+* **UN SDGs (2030 Agenda)** — which Sustainable Development Goals the language aligns to (9 themes mapped)
 
-* Key themes across ESG sections
-* Differences between **action-oriented** and **people-centric** language
-* Term importance using **TF-IDF**
-* Cross-domain keyword relationships
-* Universal language using **UN SDGs goal** to map and dig out problems int company
+The result is an auditable, comparable language profile that reveals what TSMC emphasizes, what it downplays, and where its narrative overlaps across themes.
 
-The final result is an interactive Streamlit dashboard for exploration and presentation.
+---
+
+## What Changed in This Version
+
+Compared to the previous version, this release focuses on **simplification and presentation clarity**:
+
+### Removed
+* **Orientation dimension** (action-oriented / people-centric / mixed) — removed entirely from the pipeline, analysis, and UI. The section-level framing already captures strategic differences more clearly.
+* **Issue Frame dimension** (environment, labor/talent, supply chain, innovation, governance/risk) — removed because it overlapped heavily with the section categories. Keeping both added complexity without adding insight.
+* **Co-occurrence network visualizations** — removed along with issue frames. The related `networkx`, `pyvis`, `plotly.graph_objects` dependencies are no longer needed.
+* **Separate Dashboard and Explorer pages** — merged into a single Analysis page.
+* **Top Keywords Table** — removed from explorer tabs to reduce clutter (bar chart already shows the same data).
+
+### Added / Changed
+* **Unified Analysis page** with a theme mode switcher (Strategic Framing / UN SDG Themes). Each mode follows the same flow: Distribution → Per-category tabs (word cloud + top keywords) → Top 2 synthesis → Validation.
+* **Validation section** — keyword overlap heatmap and cosine similarity heatmap shown side-by-side with interpretation, plus example chunks. This makes it easy to cross-check results.
+* **Improved chunk cards** — term highlighting with regex-based matching, key sentence extraction with sliding window, side-by-side layout.
+* **Stopwords updated** — added `fab` and `semiconductor` as domain-specific stopwords (too generic for a TSMC report to be informative).
+* **Consistent terminology** — "Strategic Framing" and "UN SDGs" used consistently across all pages.
+* **Smaller, cleaner metric cards** — reduced visual weight for better page balance.
+* **Project Overview redesigned** — now serves as "the pitch" with metric cards (200+ pages → 6 sections → 9 themes), bullet-point explanation cards, and a signature word cloud.
+
+### Page Structure (before → after)
+
+| Before | After |
+|---|---|
+| Project Overview | Project Overview (the pitch) |
+| Methods | Methods (moved to last) |
+| Dashboard | Analysis (merged) |
+| Explorer | _(merged into Analysis)_ |
 
 ---
 
 ## Key Features
 
-* **Section-based analysis**
+* **Strategic Framing analysis** — 5 ESG sections: Environment, Talent, Supply Chain, Social, Governance
 
-  * Environment
-  * Talent
-  * Supply Chain
-  * Social
-  * Governance
+* **UN SDG classification** — 9 SDG themes with dominance control:
+  * SDG 3 – Health, SDG 4 – Education, SDG 6 – Water, SDG 7 – Energy
+  * SDG 8 – Labor, SDG 9 – Innovation, SDG 12 – Consumption
+  * SDG 13 – Climate, SDG 17 – Partnership
 
-* **Narrative orientation analysis**
+  Each chunk is assigned at most 2 SDGs using keyword scoring, word-boundary matching, a dominance rule, and confidence scores.
 
-  * Action-Oriented language (e.g., reduce, improve, implement)
-  * People-Centric language (e.g., employee, community, safety)
-
-* **SDG classification with dominance control**
-
-  * SDG 3 – Good Health and Well-being
-  * SDG 4 – Quality Education
-  * SDG 6 – Clean Water and Sanitation
-  * SDG 7 – Affordable and Clean Energy
-  * SDG 8 – Decent Work and Economic Growth
-  * SDG 9 – Industry, Innovation and Infrastructure
-  * SDG 12 – Responsible Consumption and Production
-  * SDG 13 – Climate Action
-  * SDG 17 – Partnerships for the Goals
-
-  Each chunk is assigned at most 2 SDGs using keyword scoring, a stronger minimum signal threshold, and a dominance rule. Word-boundary matching prevents substring false positives. Protected phrases (e.g., `trade secret`) are preserved through tokenization.
-
-* **Visualizations**
-
-  * Word clouds (TF-IDF weighted)
-  * Top keyword bar charts
-  * Cross-section heatmaps
-  * Interactive chunk exploration
-  * SDG distribution chart
-  * Expandable SDG insight cards with editorial narrative
+* **Visualizations** — word clouds, top keyword bar charts, distribution charts, overlap heatmaps, cosine similarity heatmaps, representative chunk cards with term highlighting
 
 ---
 
 ## Pipeline
 
-The project follows a structured NLP pipeline:
-
 ```
-PDF Reports
-   ↓
-Text Extraction
-   ↓
-Preprocessing
-   - cleanup (remove headers, noise)
-   - paragraph-based chunking
-   - normalization
-   - lemmatization
-   - custom stopwords
-   - POS filtering
-   ↓
-Classification
-   - ESG section labeling (rule-based)
-   - orientation (action vs people)
-   - SDG top-1 / top-2 assignment with confidence
-   ↓
-TF-IDF Analysis
-   - per section
-   - per orientation
-   - per SDG (exploded multi-label)
-   ↓
-Visualization (Streamlit)
+PDF/Text Extraction → Cleanup → Chunking → spaCy Preprocessing → Rule-based Labels → TF-IDF & Similarity → Analysis
 ```
 
----
-
-## Preprocessing Details
-
-To ensure high-quality results while maintaining interpretability:
-
-* **Section-aware chunking**
-
-  * Based on paragraphs instead of fixed length
-
-* **Lemmatization (spaCy)**
-
-  * More stable than stemming
-
-* **Custom stopwords**
-
-  * Removes domain noise such as:
-
-    * `company`, `report`, `sustainability`, `wet`, `scrubber`, `ton`, `nature`
-
-* **Protected phrases**
-
-  * Multi-word terms joined with underscore before tokenization to survive stopword filtering (e.g., `trade_secret`)
-
-* **POS filtering**
-
-  * Keeps meaningful tokens:
-
-    * Nouns, proper nouns, adjectives
-
-* **N-grams**
-
-  * Captures phrases like:
-
-    * `carbon emission`, `supply chain`
-
----
-
-## TF-IDF Strategy
-
-TF-IDF is used instead of raw frequency to:
-
-* Highlight **important but not overly common terms**
-* Reduce dominance of generic words
-* Improve interpretability of ESG themes
-
-We compute TF-IDF:
-
-* Per section (ESG domains)
-* Per orientation (action vs people)
-* Per SDG (UN SDG goals — using exploded multi-label dataframe, each chunk can contribute to multiple SDG groups)
-
----
-
-## Dashboard
-
-The Streamlit app includes:
-
-### Overview Page
-
-* Executive summary with section, orientation, and SDG highlights
-* Metrics: total chunks, sections, orientations, SDG themes
-* Quick Insights cards: Environment, Talent, Action-Oriented focus
-* **SDG Focus**: top 2 SDGs by chunk count, with expandable editorial narrative explaining what the data really means
-* Section & orientation distributions
-* SDG distribution chart
-* Heatmaps of keyword overlap
-
-### Explorer Page
-
-* Tab-based navigation: Section view, Orientation view, SDG view
-* Word cloud per category
-* Top keywords (bar chart)
-* Representative text chunks with multi-label SDG tags
+| Step | Details |
+|---|---|
+| **Data Preparation** | Clean PDF noise, remove headers/boilerplate, paragraph-based chunking, spaCy lemmatization, custom stopwords, POS filtering |
+| **Labeling** | Strategic Framing and UN SDG labels via rule-based logic. SDG uses stronger thresholds and a dominance rule |
+| **Analysis** | TF-IDF across Strategic Framing and UN SDGs. Cosine similarity for cross-group comparison |
+| **Validation** | Audit layer checks duplicates, short chunks, repeated patterns, SDG label counts |
 
 ---
 
@@ -171,17 +80,18 @@ The Streamlit app includes:
 
 ```
 .
-├── app.py
-├── main.py
+├── app.py                # Streamlit dashboard (all pages)
+├── main.py               # Pipeline runner
 ├── src/
-│   ├── pipeline.py       # core NLP pipeline, SDG classification, TF-IDF
-│   ├── preprocess.py     # basic chunking and tokenization
-│   └── analysis.py       # diagnostic: keyword audit, sentence co-occurrence
+│   ├── pipeline.py       # Core NLP pipeline, classification, TF-IDF
+│   ├── preprocess.py     # Chunking and tokenization
+│   └── analysis.py       # Diagnostic: keyword audit
 ├── outputs/
 │   ├── chunks_processed.csv
 │   ├── tfidf_by_section.csv
-│   ├── tfidf_by_orientation.csv
-│   └── tfidf_by_sdg.csv
+│   ├── tfidf_by_sdg.csv
+│   ├── similarity_by_section.csv
+│   └── similarity_by_sdg.csv
 ├── data/
 │   └── raw/
 └── requirements.txt
@@ -189,7 +99,7 @@ The Streamlit app includes:
 
 ---
 
-## How to Run Locally
+## How to Run
 
 ```bash
 pip install -r requirements.txt
@@ -197,84 +107,38 @@ python main.py --audit
 streamlit run app.py
 ```
 
-Optional compatibility flow for the older word-cloud-only app:
-
-```bash
-python src/feature.py
-python src/visualization.py
-streamlit run app/streamlit_app.py
-```
+---
 
 ## Demo Flow
 
 Recommended presentation flow:
 
-1. Run `python main.py --audit` to regenerate outputs and confirm the Phase 1 checks pass.
-2. Open `streamlit run app.py`.
-3. Start on the `Overview` page:
-   show section, orientation, and SDG distributions plus the overlap heatmaps.
-4. Move to `Explorer`:
-   use `Section view`, then `Orientation view`, then `SDG view`.
-5. Open representative chunks to connect the TF-IDF terms back to report evidence.
-
-## Frozen Baseline
-
-The baseline deliverable for this repo is:
-
-- one unified preprocessing pipeline in `src/pipeline.py`
-- output CSVs in `outputs/`
-- a Streamlit dashboard in `app.py`
-- a Phase 1 audit in `src/phase1_audit.py`
-- optional legacy word-cloud scripts kept only for compatibility
-
----
-
-## Deployment
-
-This app is deployed using **Streamlit Community Cloud**.
-
-Any update pushed to GitHub will automatically trigger a redeploy.
+1. **Project Overview** — show the pitch: what we decode, why it matters, signature word cloud
+2. **Analysis → Strategic Framing** — distribution, per-section word clouds, top 2 synthesis, validation heatmaps
+3. **Analysis → UN SDG Themes** — same flow for SDG dimension
+4. **Methods** — pipeline walkthrough (if audience asks "how?")
 
 ---
 
 ## Key Insights
 
-* Environmental sections emphasize: carbon, waste, energy, recycling
-* Governance focuses on: board, risk management, compliance
-* Action-oriented language: reduce, improve, implement
-* People-centric language: employee development, community engagement
-* **SDG 17 (Partnership)** has the highest chunk count — driven by compliance infrastructure (committee, carbon reduction, chemical), not goodwill language
-* **SDG 9 (Innovation)** is IP-led: patent and trade secret dominate over generic R&D terms
-* **Chemical** appears across SDG 3, 6, 12 because chemical management is cross-cutting in semiconductor fab operations
+* **Talent** and **Environment** are the two largest sections by chunk count
+* **SDG 17 (Partnership)** dominates — driven by compliance infrastructure (committee, carbon reduction, chemical), not goodwill language
+* **SDG 4 (Education)** ranks high but top terms overlap with talent retention and social welfare — the keyword boundary is leaking
+* **Environment** and **Supply Chain** share the most keywords (supplier, risk, chain, management) — Scope 3 compliance forces environmental language into supply chain territory
+* **Talent** and **Social** have the highest cosine similarity despite different top keywords — structurally similar language, topically distinct
+* `fab` and `semiconductor` filtered as stopwords — too generic for a TSMC report
 
 ---
 
 ## Tech Stack
 
-* Python
-* pandas
+* Python, pandas
 * spaCy (preprocessing)
-* scikit-learn (TF-IDF)
+* scikit-learn (TF-IDF, cosine similarity)
 * Streamlit
 * Plotly
 * WordCloud
-
----
-
-## Notes
-
-* This project prioritizes **interpretability over complexity**
-* Rule-based classification is used for transparency
-* No heavy deep learning models are required
-
----
-
-## Future Improvements
-
-* Multi-year ESG comparison
-* Topic modeling / clustering
-* LLM-based insight generation
-* More advanced UI/UX enhancements
 
 ---
 

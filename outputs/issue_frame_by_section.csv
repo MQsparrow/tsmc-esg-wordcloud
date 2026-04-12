@@ -7,8 +7,8 @@ environment,other,1,0.0111
 governance,governance_risk,20,0.6897
 governance,innovation,7,0.2414
 governance,labor_talent,2,0.069
-other,innovation,1,0.1667
-other,other,5,0.8333
+other,innovation,1,0.2
+other,other,4,0.8
 social,environment,5,0.2
 social,governance_risk,3,0.12
 social,innovation,2,0.08
