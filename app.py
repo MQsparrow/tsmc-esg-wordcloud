@@ -262,16 +262,22 @@ def inject_custom_styles() -> None:
         [data-testid="stSidebar"] {
             background: linear-gradient(180deg, #f8fafc 0%, #eff6ff 100%);
         }
+        [data-testid="stHorizontalBlock"] {
+            gap: 1.15rem;
+            align-items: stretch;
+        }
         @media (max-width: 768px) {
             .block-container {
-                padding-top: 1rem;
-                padding-left: 1rem;
-                padding-right: 1rem;
+                padding-top: calc(4.75rem + env(safe-area-inset-top));
+                padding-left: 1.15rem;
+                padding-right: 1.15rem;
+                padding-bottom: 2.25rem;
                 max-width: 100%;
             }
             .app-shell {
                 padding: 1.15rem 1rem;
                 border-radius: 18px;
+                margin-bottom: 1rem;
             }
             .page-title {
                 font-size: 1.7rem;
@@ -280,13 +286,27 @@ def inject_custom_styles() -> None:
                 font-size: 0.95rem;
                 line-height: 1.6;
             }
+            [data-testid="stHorizontalBlock"] {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 1rem !important;
+            }
+            [data-testid="column"] {
+                width: 100% !important;
+                flex: 1 1 100% !important;
+                min-width: 100% !important;
+                padding-left: 0.05rem !important;
+                padding-right: 0.05rem !important;
+            }
             .soft-card, .highlight-card {
                 min-height: auto;
                 padding: 0.95rem;
+                margin-bottom: 0.2rem;
             }
             .stat-card {
                 min-height: auto;
                 padding: 0.9rem;
+                margin-bottom: 0.2rem;
             }
             .stat-card .value {
                 font-size: 2rem;
@@ -300,13 +320,36 @@ def inject_custom_styles() -> None:
             .pipeline-step-card {
                 min-height: auto;
                 padding: 0.9rem;
-                margin-bottom: 0.7rem;
+                margin-bottom: 0.85rem;
+            }
+            [data-testid="stTabs"] [role="tablist"] {
+                flex-wrap: wrap;
+                gap: 0.35rem;
+                padding: 0.25rem;
+            }
+            [data-testid="stTabs"] [role="tab"] {
+                flex: 1 1 calc(50% - 0.35rem);
+                justify-content: center;
+                min-height: 42px;
+                padding: 0.45rem 0.6rem;
+                font-size: 0.92rem;
+            }
+            [data-testid="stExpander"] summary p {
+                white-space: normal !important;
+                overflow: visible !important;
+                text-overflow: unset !important;
             }
             [data-testid="stExpander"] div[role="region"] {
                 min-height: auto;
             }
             [data-testid="stPlotlyChart"] {
                 margin-bottom: 0.35rem;
+            }
+            [data-testid="stDataFrame"] {
+                overflow-x: auto;
+            }
+            iframe {
+                max-width: 100% !important;
             }
             [data-testid="stSidebar"] {
                 min-width: 82vw !important;
