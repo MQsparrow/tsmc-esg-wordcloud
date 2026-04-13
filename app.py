@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
@@ -782,6 +783,14 @@ def prettify_label(x: str) -> str:
     return x.replace("_", " ").title()
 
 
+def compact_heatmap_label(x: str) -> str:
+    label = prettify_label(x)
+    sdg_match = re.match(r"SDG\s+(\d+)", label)
+    if sdg_match:
+        return f"SDG {sdg_match.group(1)}"
+    return label
+
+
 def parse_sdg_labels(label_text: str) -> list[str]:
     if not label_text:
         return []
@@ -1104,34 +1113,57 @@ def build_overlap_heatmap(df: pd.DataFrame, group_col: str, ordered_groups: list
 
 
 def plot_heatmap(heatmap_df: pd.DataFrame, title: str, chart_key: str | None = None):
-    pretty_index = [prettify_label(x) for x in heatmap_df.index]
-    pretty_cols = [prettify_label(x) for x in heatmap_df.columns]
+    pretty_index = [compact_heatmap_label(x) for x in heatmap_df.index]
+    pretty_cols = [compact_heatmap_label(x) for x in heatmap_df.columns]
+    hover_index = [prettify_label(x) for x in heatmap_df.index]
+    hover_cols = [prettify_label(x) for x in heatmap_df.columns]
+    values = heatmap_df.values
+    is_integer_like = np.allclose(values, np.round(values))
+    chart_width = max(720, 82 * len(pretty_cols) + 220)
 
     fig = px.imshow(
-        heatmap_df.values,
+        values,
         x=pretty_cols,
         y=pretty_index,
-        text_auto=True,
+        text_auto=".0f" if is_integer_like else ".2f",
         aspect="auto",
         title=title,
         color_continuous_scale="Blues"
     )
     fig.update_layout(
+        width=chart_width,
         height=480,
-        margin=dict(l=20, r=20, t=60, b=20),
+        margin=dict(l=28, r=18, t=60, b=64),
         xaxis_title="",
         yaxis_title="",
         plot_bgcolor="rgba(255,255,255,0.92)",
         paper_bgcolor="rgba(255,255,255,0.0)",
+        xaxis=dict(tickangle=90, automargin=True, tickfont=dict(size=11)),
+        yaxis=dict(automargin=True, tickfont=dict(size=11)),
     )
     fig.update_traces(
-        hovertemplate="X: %{x}<br>Y: %{y}<br>Value: %{z}<extra></extra>"
+        customdata=[
+            [{"full_x": hover_cols[col_idx], "full_y": hover_index[row_idx]} for col_idx in range(len(hover_cols))]
+            for row_idx in range(len(hover_index))
+        ],
+        hovertemplate=(
+            "X: %{customdata.full_x}<br>Y: %{customdata.full_y}<br>Value: %{z:.0f}<extra></extra>"
+            if is_integer_like
+            else "X: %{customdata.full_x}<br>Y: %{customdata.full_y}<br>Value: %{z:.2f}<extra></extra>"
+        ),
+        textfont=dict(size=9),
     )
-    st.plotly_chart(
-        fig,
-        use_container_width=True,
-        config=PLOTLY_INTERACTIVE_CONFIG,
-        key=chart_key,
+    scrollable_chart_html = f"""
+    <div style="width:100%; overflow-x:auto; overflow-y:hidden; padding-bottom:0.35rem;">
+        <div style="min-width:{chart_width}px;">
+            {fig.to_html(full_html=False, include_plotlyjs='cdn', config=PLOTLY_INTERACTIVE_CONFIG)}
+        </div>
+    </div>
+    """
+    components.html(
+        scrollable_chart_html,
+        height=540,
+        scrolling=False,
     )
 
 
