@@ -9,6 +9,9 @@ import streamlit.components.v1 as components
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
 import plotly.express as px
+from app_pages.analysis import render_page as render_analysis_page
+from app_pages.methods import render_page as render_methods_page
+from app_pages.project_overview import render_page as render_project_overview_page
 
 try:
     from streamlit_echarts import st_echarts
@@ -70,6 +73,7 @@ def inject_custom_styles() -> None:
             padding: 1rem;
             box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
             min-height: 210px;
+            margin-bottom: 0.1rem;
         }
         .soft-card h4, .highlight-card h4 {
             color: #0f172a;
@@ -89,6 +93,7 @@ def inject_custom_styles() -> None:
             border-radius: 18px;
             padding: 1rem;
             min-height: 210px;
+            margin-bottom: 0.1rem;
         }
         .mini-kicker {
             color: #0f766e;
@@ -149,6 +154,47 @@ def inject_custom_styles() -> None:
             color: #0f766e;
             font-size: 1.02rem;
             white-space: nowrap;
+        }
+        .pipeline-step-card {
+            background: rgba(255,255,255,0.92);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 18px;
+            padding: 1rem;
+            min-height: 210px;
+            margin-bottom: 0.85rem;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .pipeline-step-card::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 4px;
+            background: linear-gradient(90deg, #14b8a6 0%, #2563eb 100%);
+            opacity: 0.9;
+        }
+        .pipeline-step-number {
+            color: #0f766e;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 0.45rem;
+        }
+        .pipeline-step-title {
+            color: #0f172a;
+            font-size: 1.05rem;
+            font-weight: 800;
+            margin-bottom: 0.45rem;
+        }
+        .pipeline-step-body {
+            color: #475569;
+            font-size: 0.94rem;
+            line-height: 1.65;
+            margin: 0;
         }
         .tight-section {
             margin-top: 0.4rem;
@@ -251,6 +297,11 @@ def inject_custom_styles() -> None:
             .flow-band code {
                 font-size: 0.92rem;
             }
+            .pipeline-step-card {
+                min-height: auto;
+                padding: 0.9rem;
+                margin-bottom: 0.7rem;
+            }
             [data-testid="stExpander"] div[role="region"] {
                 min-height: auto;
             }
@@ -311,7 +362,7 @@ def render_kicker_card(kicker: str, title: str, text: str, highlight: bool = Fal
 def render_card_grid(cards: list[dict], columns: int = 2) -> None:
     for start in range(0, len(cards), columns):
         row_cards = cards[start:start + columns]
-        cols = st.columns(columns)
+        cols = st.columns(columns, gap="large")
         for col, card in zip(cols, row_cards):
             with col:
                 if card.get("kicker"):
@@ -331,12 +382,14 @@ def render_card_grid(cards: list[dict], columns: int = 2) -> None:
             for col in cols[len(row_cards):]:
                 with col:
                     st.empty()
+        if start + columns < len(cards):
+            st.markdown("<div style='height:0.9rem'></div>", unsafe_allow_html=True)
 
 
 def render_metric_grid(metrics: list[dict], columns: int = 4) -> None:
     for start in range(0, len(metrics), columns):
         row_metrics = metrics[start:start + columns]
-        cols = st.columns(columns)
+        cols = st.columns(columns, gap="large")
         for col, metric in zip(cols, row_metrics):
             note = f'<div class="note">{metric["note"]}</div>' if metric.get("note") else ""
             with col:
@@ -354,6 +407,8 @@ def render_metric_grid(metrics: list[dict], columns: int = 4) -> None:
             for col in cols[len(row_metrics):]:
                 with col:
                     st.empty()
+        if start + columns < len(metrics):
+            st.markdown("<div style='height:0.65rem'></div>", unsafe_allow_html=True)
 
 
 # def render_flow_band(text: str) -> None:
@@ -401,6 +456,28 @@ def render_flow_band(flow_string):
     flow_html += '</div>'
     
     st.markdown(flow_html, unsafe_allow_html=True)
+
+
+def render_pipeline_steps(steps: list[dict], columns: int = 3) -> None:
+    for start in range(0, len(steps), columns):
+        row_steps = steps[start:start + columns]
+        cols = st.columns(columns, gap="large")
+        for col, step in zip(cols, row_steps):
+            with col:
+                st.markdown(
+                    f"""
+                    <div class="pipeline-step-card">
+                        <div class="pipeline-step-number">{step['number']}</div>
+                        <div class="pipeline-step-title">{step['title']}</div>
+                        <p class="pipeline-step-body">{step['text']}</p>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+        if len(row_steps) < columns:
+            for col in cols[len(row_steps):]:
+                with col:
+                    st.empty()
 
 def inject_motion_script() -> None:
     components.html(
@@ -773,7 +850,7 @@ def render_interactive_wordcloud(df: pd.DataFrame, top_k: int = 60):
     st_echarts(options=options, height="440px")
 
 
-def plot_top_terms(df: pd.DataFrame, title: str, top_k: int = 15):
+def plot_top_terms(df: pd.DataFrame, title: str, top_k: int = 15, chart_key: str | None = None):
     df_plot = df.sort_values("tfidf_score", ascending=False).head(top_k).copy()
 
     fig = px.bar(
@@ -796,7 +873,12 @@ def plot_top_terms(df: pd.DataFrame, title: str, top_k: int = 15):
     fig.update_traces(
         hovertemplate="Term: %{y}<br>TF-IDF: %{x:.4f}<extra></extra>"
     )
-    st.plotly_chart(fig, use_container_width=True, config=PLOTLY_INTERACTIVE_CONFIG)
+    st.plotly_chart(
+        fig,
+        use_container_width=True,
+        config=PLOTLY_INTERACTIVE_CONFIG,
+        key=chart_key,
+    )
 
 
 def get_top_terms_table(df: pd.DataFrame, top_k: int = 20):
@@ -978,7 +1060,7 @@ def build_overlap_heatmap(df: pd.DataFrame, group_col: str, ordered_groups: list
     return pd.DataFrame(matrix, index=groups, columns=groups)
 
 
-def plot_heatmap(heatmap_df: pd.DataFrame, title: str):
+def plot_heatmap(heatmap_df: pd.DataFrame, title: str, chart_key: str | None = None):
     pretty_index = [prettify_label(x) for x in heatmap_df.index]
     pretty_cols = [prettify_label(x) for x in heatmap_df.columns]
 
@@ -1006,6 +1088,7 @@ def plot_heatmap(heatmap_df: pd.DataFrame, title: str):
         fig,
         use_container_width=True,
         config=PLOTLY_INTERACTIVE_CONFIG,
+        key=chart_key,
     )
 
 
@@ -1037,7 +1120,7 @@ def summarize_similarity_pairs(similarity_df: pd.DataFrame, top_n: int = 3, asce
     return out.reset_index(drop=True)
 
 
-def plot_distribution_bar(df: pd.DataFrame, col: str, title: str):
+def plot_distribution_bar(df: pd.DataFrame, col: str, title: str, chart_key: str | None = None):
     counts = df[col].value_counts().reset_index()
     counts.columns = [col, "count"]
     counts[col] = counts[col].map(prettify_label)
@@ -1068,6 +1151,7 @@ def plot_distribution_bar(df: pd.DataFrame, col: str, title: str):
         fig,
         use_container_width=True,
         config=PLOTLY_INTERACTIVE_CONFIG,
+        key=chart_key,
     )
 
 
@@ -1125,6 +1209,56 @@ filtered_chunks = filter_chunks_by_keyword(df_chunks, keyword_search)
 # Top-level Pages
 # =========================
 if page_mode == "Project Overview":
+    render_project_overview_page(
+        df_chunks=df_chunks,
+        df_section_tfidf=df_section_tfidf,
+        df_sdg_tfidf=df_sdg_tfidf,
+        render_page_header=render_page_header,
+        render_metric_grid=render_metric_grid,
+        render_card_grid=render_card_grid,
+        aggregate_terms_for_overview=aggregate_terms_for_overview,
+        render_interactive_wordcloud=render_interactive_wordcloud,
+        st=st,
+    )
+elif False and page_mode == "Methods":
+    render_methods_page(
+        render_page_header=render_page_header,
+        render_pipeline_steps=render_pipeline_steps,
+        render_card_grid=render_card_grid,
+        st=st,
+    )
+elif False and page_mode == "Analysis":
+    render_analysis_page(
+        theme_mode=theme_mode,
+        top_k=top_k,
+        df_chunks=df_chunks,
+        filtered_chunks=filtered_chunks,
+        df_section_tfidf=df_section_tfidf,
+        df_sdg_tfidf=df_sdg_tfidf,
+        df_section_similarity=df_section_similarity,
+        df_sdg_similarity=df_sdg_similarity,
+        render_page_header=render_page_header,
+        render_metric_grid=render_metric_grid,
+        render_interpretation=render_interpretation,
+        plot_distribution_bar=plot_distribution_bar,
+        plot_top_terms=plot_top_terms,
+        render_interactive_wordcloud=render_interactive_wordcloud,
+        build_overlap_heatmap=build_overlap_heatmap,
+        plot_heatmap=plot_heatmap,
+        summarize_similarity_pairs=summarize_similarity_pairs,
+        render_chunk_cards=render_chunk_cards,
+        explode_sdg_chunks=explode_sdg_chunks,
+        filter_chunks_by_sdg=filter_chunks_by_sdg,
+        SECTION_LABEL_MAP=SECTION_LABEL_MAP,
+        SECTION_ORDER=SECTION_ORDER,
+        SECTION_NARRATIVE=SECTION_NARRATIVE,
+        SDG_LABEL_MAP=SDG_LABEL_MAP,
+        SDG_ORDER=SDG_ORDER,
+        SDG_NARRATIVE=SDG_NARRATIVE,
+        st=st,
+    )
+
+if False and page_mode == "Project Overview":
     render_page_header(
         "The Pitch",
         "Project Overview",
@@ -1186,9 +1320,49 @@ elif page_mode == "Methods":
     )
 
     st.markdown("### Pipeline Flow")
-    render_flow_band("PDF/Text Extraction -> Cleanup -> Chunking -> spaCy Preprocessing -> Rule-based Labels -> TF-IDF & Similarity -> Analysis")
+    st.markdown(
+        '<div class="section-note">The workflow keeps each transformation explainable. We move from raw PDF text to cleaned chunks, then add labels and analysis layers only after the text is stable enough to defend.</div>',
+        unsafe_allow_html=True,
+    )
+    render_pipeline_steps(
+        [
+            {
+                "number": "Step 1",
+                "title": "Extract",
+                "text": "Pull text from the PDF and preserve enough structure to trace the source before cleanup begins.",
+            },
+            {
+                "number": "Step 2",
+                "title": "Clean",
+                "text": "Remove page markers, repeated headers, appendix boilerplate, and leftover PDF artifacts that would distort later metrics.",
+            },
+            {
+                "number": "Step 3",
+                "title": "Chunk",
+                "text": "Split the report into paragraph-level units and drop noisy fragments so each chunk holds a cleaner semantic idea.",
+            },
+            {
+                "number": "Step 4",
+                "title": "Preprocess",
+                "text": "Use spaCy for normalization, lemmatization, stopword removal, and POS filtering so grouped language is comparable.",
+            },
+            {
+                "number": "Step 5",
+                "title": "Label",
+                "text": "Assign Strategic Framing, orientation, SDG, and issue-frame labels with rule-based logic, stronger thresholds, and confidence-aware scoring.",
+            },
+            {
+                "number": "Step 6",
+                "title": "Analyze",
+                "text": "Generate TF-IDF, cosine similarity, co-occurrence networks, and evidence views that feed directly into the dashboard.",
+            },
+        ],
+        columns=3,
+    )
+    st.markdown("<div style='height:0.55rem'></div>", unsafe_allow_html=True)
     
-    st.markdown("""
+    if False:
+        st.markdown("""
     <style>
     [data-testid="column"] {
         padding: 15px; /* 增加列內部的填充 */
@@ -1267,7 +1441,8 @@ elif page_mode == "Analysis":
         columns=3,
     )
 
-    st.markdown("""
+    if False:
+        st.markdown("""
         <style>
         [data-testid="stExpander"] summary p {
             white-space: nowrap !important;
