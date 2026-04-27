@@ -4,6 +4,8 @@ __pycache__/
 *.pyo
 *.pyd
 
+.devcontainer/
+
 # Virtual environment
 env/
 venv/

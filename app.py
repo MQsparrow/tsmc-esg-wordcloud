@@ -13,6 +13,7 @@ import plotly.express as px
 from app_pages.analysis import render_page as render_analysis_page
 from app_pages.methods import render_page as render_methods_page
 from app_pages.project_overview import render_page as render_project_overview_page
+from app_pages.week9_q1 import render_page as render_week9_q1_page
 
 try:
     from streamlit_echarts import st_echarts
@@ -1262,7 +1263,7 @@ st.sidebar.header("Controls")
 
 page_mode = st.sidebar.selectbox(
     "Page",
-    ["Project Overview", "Analysis", "Methods"]
+    ["Project Overview", "Analysis", "Methods", "Kiwi's Week9 Q1"]
 )
 
 theme_mode = None
@@ -1293,6 +1294,16 @@ if page_mode == "Project Overview":
         render_card_grid=render_card_grid,
         aggregate_terms_for_overview=aggregate_terms_for_overview,
         render_interactive_wordcloud=render_interactive_wordcloud,
+        st=st,
+    )
+elif page_mode == "Kiwi's Week9 Q1":
+    render_week9_q1_page(
+        df_chunks=df_chunks,
+        render_page_header=render_page_header,
+        render_metric_grid=render_metric_grid,
+        render_card_grid=render_card_grid,
+        section_label_map=SECTION_LABEL_MAP,
+        sdg_label_map=SDG_LABEL_MAP,
         st=st,
     )
 elif False and page_mode == "Methods":
