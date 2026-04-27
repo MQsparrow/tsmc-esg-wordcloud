@@ -964,59 +964,76 @@ def render_page(
         ],
     )
 
-    analysis_tabs = st.tabs(["Terms & Similarity", "Network & Clusters", "Tone & Evidence"])
+    st.markdown(
+        """
+        <style>
+        [data-testid="stTabs"] [role="tablist"] {
+            flex-wrap: wrap;
+            row-gap: 0.45rem;
+        }
+        [data-testid="stTabs"] [role="tab"] {
+            min-height: 40px;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    with analysis_tabs[0]:
-        left, right = st.columns([1, 1], gap="large")
+    tabs = st.tabs(["Phrases", "Co-occurrence", "TF-IDF", "Similarity", "Clusters", "ESG Tone", "Context"])
+
+    with tabs[0]:
+        st.markdown("### Phrase Mining")
+        st.caption("This view counts repeated two-word or three-word expressions in the filtered chunks.")
+        _plot_phrase_bar(st, phrase_df, f"Top {ngram_label} in Filtered ESG Text")
+
+    with tabs[1]:
+        st.markdown("### Keyword Co-occurrence")
+        left, right = st.columns([1.1, 1])
         with left:
-            st.markdown("### Phrase Mining")
-            st.caption("Repeated two-word or three-word expressions in the filtered chunks.")
-            _plot_phrase_bar(st, phrase_df, f"Top {ngram_label}")
-        with right:
-            st.markdown("### Cosine Similarity")
-            st.caption("Groups with similar TF-IDF vocabularies receive higher scores.")
-            _plot_similarity_heatmap(st, similarity_df)
-
-        st.markdown("### TF-IDF Group Comparison")
-        st.caption("Terms that are distinctive for each selected grouping, rather than merely frequent overall.")
-        _plot_tfidf_terms(st, tfidf_df)
-        if not tfidf_df.empty:
-            with st.expander("Top Terms Table", expanded=False):
-                st.dataframe(tfidf_df, use_container_width=True, hide_index=True)
-
-    with analysis_tabs[1]:
-        left, right = st.columns([1.1, 1], gap="large")
-        with left:
-            st.markdown("### Keyword Co-occurrence Network")
             _plot_network(st, pair_df, term_df)
         with right:
-            st.markdown("### Strongest Keyword Pairs")
             _plot_pair_heatmap(st, pair_df, top_pairs=top_n)
 
+    with tabs[2]:
+        st.markdown("### TF-IDF Group Comparison")
+        st.caption(
+            "This view highlights terms that are distinctive for each selected grouping, rather than merely frequent overall."
+        )
+        _plot_tfidf_terms(st, tfidf_df)
+        if not tfidf_df.empty:
+            st.markdown("**Top Terms Table**")
+            st.dataframe(tfidf_df, use_container_width=True, hide_index=True)
+
+    with tabs[3]:
+        st.markdown("### Cosine Similarity")
+        st.caption("Groups with similar TF-IDF vocabularies receive higher similarity scores.")
+        _plot_similarity_heatmap(st, similarity_df)
+
+    with tabs[4]:
         st.markdown("### TF-IDF Chunk Clustering")
         st.caption("Each point is one report chunk. Nearby points use similar vocabulary after TF-IDF vectorization.")
         _plot_cluster_scatter(st, cluster_df)
         if not cluster_summary_df.empty:
-            with st.expander("Cluster Interpretation Table", expanded=False):
-                st.dataframe(cluster_summary_df, use_container_width=True, hide_index=True)
+            st.markdown("**Cluster Interpretation Table**")
+            st.dataframe(cluster_summary_df, use_container_width=True, hide_index=True)
 
-    with analysis_tabs[2]:
-        left, right = st.columns([1.05, 0.95], gap="large")
-        with left:
-            st.markdown("### ESG Tone Heatmap")
-            st.caption("Lexicon hits per 1,000 tokens, grouped by section unless an SDG filter is active.")
-            _plot_tone_heatmap(st, tone_df, "ESG Language Frames by Group")
-            if not tone_df.empty:
-                strongest_tone = tone_df.sort_values("score", ascending=False).head(1).iloc[0]
-                st.info(
-                    f"Strongest frame under the current filters: {strongest_tone['group']} leans toward "
-                    f"{strongest_tone['tone']} language ({strongest_tone['score']} terms per 1,000 tokens)."
-                )
-        with right:
-            st.markdown("### Keyword Context Explorer")
-            keyword_options = term_df["term"].tolist()
-            if keyword_options:
-                selected_keyword = st.selectbox("Keyword", options=keyword_options, index=0)
-                _render_context_cards(st, filtered_df, selected_keyword)
-            else:
-                st.info("No keywords are available for this filter.")
+    with tabs[5]:
+        st.markdown("### ESG Tone Heatmap")
+        st.caption("Scores are lexicon hits per 1,000 tokens, grouped by section unless an SDG filter is active.")
+        _plot_tone_heatmap(st, tone_df, "ESG Language Frames by Group")
+        if not tone_df.empty:
+            strongest_tone = tone_df.sort_values("score", ascending=False).head(1).iloc[0]
+            st.info(
+                f"Strongest frame under the current filters: {strongest_tone['group']} leans toward "
+                f"{strongest_tone['tone']} language ({strongest_tone['score']} terms per 1,000 tokens)."
+            )
+
+    with tabs[6]:
+        st.markdown("### Keyword Context Explorer")
+        keyword_options = term_df["term"].tolist()
+        if not keyword_options:
+            st.info("No keywords are available for this filter.")
+            return
+
+        selected_keyword = st.selectbox("Keyword", options=keyword_options, index=0)
+        _render_context_cards(st, filtered_df, selected_keyword)
