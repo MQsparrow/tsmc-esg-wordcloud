@@ -516,16 +516,28 @@ def _plot_similarity_heatmap(st, similarity_df: pd.DataFrame) -> None:
         st.info("Similarity needs at least two groups with usable text.")
         return
 
-    fig = px.imshow(
-        similarity_df,
-        text_auto=".2f",
-        color_continuous_scale="Tealgrn",
-        zmin=0,
-        zmax=1,
-        aspect="auto",
-        title="Cosine Similarity Between Groups",
+    matrix = similarity_df.astype(float)
+    x_labels = matrix.columns.astype(str).tolist()
+    y_labels = matrix.index.astype(str).tolist()
+    text_values = [[f"{value:.2f}" for value in row] for row in matrix.to_numpy()]
+
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=matrix.to_numpy(),
+            x=x_labels,
+            y=y_labels,
+            text=text_values,
+            texttemplate="%{text}",
+            textfont=dict(size=12, color="#0f172a"),
+            colorscale="Tealgrn",
+            zmin=0,
+            zmax=1,
+            colorbar=dict(title="Similarity"),
+            hovertemplate="%{y} vs %{x}<br>Similarity: %{z:.2f}<extra></extra>",
+        )
     )
     fig.update_layout(
+        title="Cosine Similarity Between Groups",
         height=max(390, 48 * len(similarity_df)),
         margin=dict(l=20, r=20, t=55, b=20),
         xaxis_title="",
@@ -533,7 +545,8 @@ def _plot_similarity_heatmap(st, similarity_df: pd.DataFrame) -> None:
         paper_bgcolor="rgba(255,255,255,0)",
         plot_bgcolor="rgba(255,255,255,0.92)",
     )
-    fig.update_traces(hovertemplate="%{y} vs %{x}<br>Similarity: %{z:.2f}<extra></extra>")
+    fig.update_xaxes(side="top", tickangle=-25)
+    fig.update_yaxes(autorange="reversed")
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": True, "scrollZoom": True})
 
 
@@ -654,14 +667,22 @@ def _plot_tone_heatmap(st, tone_df: pd.DataFrame, title: str) -> None:
         return
 
     matrix = tone_df.pivot_table(index="group", columns="tone", values="score", fill_value=0)
-    fig = px.imshow(
-        matrix,
-        text_auto=".1f",
-        color_continuous_scale="Tealgrn",
-        aspect="auto",
-        title=title,
+    text_values = [[f"{value:.1f}" for value in row] for row in matrix.to_numpy()]
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=matrix.to_numpy(),
+            x=matrix.columns.astype(str).tolist(),
+            y=matrix.index.astype(str).tolist(),
+            text=text_values,
+            texttemplate="%{text}",
+            textfont=dict(size=12, color="#0f172a"),
+            colorscale="Tealgrn",
+            colorbar=dict(title="Terms per 1k"),
+            hovertemplate="Group: %{y}<br>Frame: %{x}<br>Terms per 1k tokens: %{z:.1f}<extra></extra>",
+        )
     )
     fig.update_layout(
+        title=title,
         height=max(360, 46 * len(matrix)),
         margin=dict(l=20, r=20, t=55, b=20),
         xaxis_title="ESG language frame",
@@ -669,7 +690,8 @@ def _plot_tone_heatmap(st, tone_df: pd.DataFrame, title: str) -> None:
         paper_bgcolor="rgba(255,255,255,0)",
         plot_bgcolor="rgba(255,255,255,0.92)",
     )
-    fig.update_traces(hovertemplate="Group: %{y}<br>Frame: %{x}<br>Terms per 1k tokens: %{z:.1f}<extra></extra>")
+    fig.update_xaxes(side="top")
+    fig.update_yaxes(autorange="reversed")
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": True, "scrollZoom": True})
 
 
@@ -942,73 +964,59 @@ def render_page(
         ],
     )
 
-    view_mode = st.selectbox(
-        "Visualization",
-        [
-            "Phrase Mining",
-            "Keyword Co-occurrence",
-            "TF-IDF Terms",
-            "Cosine Similarity",
-            "Chunk Clusters",
-            "ESG Tone",
-            "Keyword Context",
-        ],
-        index=0,
-    )
+    analysis_tabs = st.tabs(["Terms & Similarity", "Network & Clusters", "Tone & Evidence"])
 
-    if view_mode == "Phrase Mining":
-        st.markdown("### Phrase Mining")
-        st.caption("This view counts repeated two-word or three-word expressions in the filtered chunks.")
-        _plot_phrase_bar(st, phrase_df, f"Top {ngram_label} in Filtered ESG Text")
-
-    elif view_mode == "Keyword Co-occurrence":
-        st.markdown("### Keyword Co-occurrence")
-        left, right = st.columns([1.1, 1])
+    with analysis_tabs[0]:
+        left, right = st.columns([1, 1], gap="large")
         with left:
-            _plot_network(st, pair_df, term_df)
+            st.markdown("### Phrase Mining")
+            st.caption("Repeated two-word or three-word expressions in the filtered chunks.")
+            _plot_phrase_bar(st, phrase_df, f"Top {ngram_label}")
         with right:
-            _plot_pair_heatmap(st, pair_df, top_pairs=top_n)
+            st.markdown("### Cosine Similarity")
+            st.caption("Groups with similar TF-IDF vocabularies receive higher scores.")
+            _plot_similarity_heatmap(st, similarity_df)
 
-    elif view_mode == "TF-IDF Terms":
         st.markdown("### TF-IDF Group Comparison")
-        st.caption(
-            "This view highlights terms that are distinctive for each selected grouping, rather than merely frequent overall."
-        )
+        st.caption("Terms that are distinctive for each selected grouping, rather than merely frequent overall.")
         _plot_tfidf_terms(st, tfidf_df)
         if not tfidf_df.empty:
-            st.markdown("**Top Terms Table**")
-            st.dataframe(tfidf_df, use_container_width=True, hide_index=True)
+            with st.expander("Top Terms Table", expanded=False):
+                st.dataframe(tfidf_df, use_container_width=True, hide_index=True)
 
-    elif view_mode == "Cosine Similarity":
-        st.markdown("### Cosine Similarity")
-        st.caption("Groups with similar TF-IDF vocabularies receive higher similarity scores.")
-        _plot_similarity_heatmap(st, similarity_df)
+    with analysis_tabs[1]:
+        left, right = st.columns([1.1, 1], gap="large")
+        with left:
+            st.markdown("### Keyword Co-occurrence Network")
+            _plot_network(st, pair_df, term_df)
+        with right:
+            st.markdown("### Strongest Keyword Pairs")
+            _plot_pair_heatmap(st, pair_df, top_pairs=top_n)
 
-    elif view_mode == "Chunk Clusters":
         st.markdown("### TF-IDF Chunk Clustering")
         st.caption("Each point is one report chunk. Nearby points use similar vocabulary after TF-IDF vectorization.")
         _plot_cluster_scatter(st, cluster_df)
         if not cluster_summary_df.empty:
-            st.markdown("**Cluster Interpretation Table**")
-            st.dataframe(cluster_summary_df, use_container_width=True, hide_index=True)
+            with st.expander("Cluster Interpretation Table", expanded=False):
+                st.dataframe(cluster_summary_df, use_container_width=True, hide_index=True)
 
-    elif view_mode == "ESG Tone":
-        st.markdown("### ESG Tone Heatmap")
-        st.caption("Scores are lexicon hits per 1,000 tokens, grouped by section unless an SDG filter is active.")
-        _plot_tone_heatmap(st, tone_df, "ESG Language Frames by Group")
-        if not tone_df.empty:
-            strongest_tone = tone_df.sort_values("score", ascending=False).head(1).iloc[0]
-            st.info(
-                f"Strongest frame under the current filters: {strongest_tone['group']} leans toward "
-                f"{strongest_tone['tone']} language ({strongest_tone['score']} terms per 1,000 tokens)."
-            )
-
-    elif view_mode == "Keyword Context":
-        st.markdown("### Keyword Context Explorer")
-        keyword_options = term_df["term"].tolist()
-        if not keyword_options:
-            st.info("No keywords are available for this filter.")
-            return
-
-        selected_keyword = st.selectbox("Keyword", options=keyword_options, index=0)
-        _render_context_cards(st, filtered_df, selected_keyword)
+    with analysis_tabs[2]:
+        left, right = st.columns([1.05, 0.95], gap="large")
+        with left:
+            st.markdown("### ESG Tone Heatmap")
+            st.caption("Lexicon hits per 1,000 tokens, grouped by section unless an SDG filter is active.")
+            _plot_tone_heatmap(st, tone_df, "ESG Language Frames by Group")
+            if not tone_df.empty:
+                strongest_tone = tone_df.sort_values("score", ascending=False).head(1).iloc[0]
+                st.info(
+                    f"Strongest frame under the current filters: {strongest_tone['group']} leans toward "
+                    f"{strongest_tone['tone']} language ({strongest_tone['score']} terms per 1,000 tokens)."
+                )
+        with right:
+            st.markdown("### Keyword Context Explorer")
+            keyword_options = term_df["term"].tolist()
+            if keyword_options:
+                selected_keyword = st.selectbox("Keyword", options=keyword_options, index=0)
+                _render_context_cards(st, filtered_df, selected_keyword)
+            else:
+                st.info("No keywords are available for this filter.")
