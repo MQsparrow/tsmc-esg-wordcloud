@@ -942,14 +942,26 @@ def render_page(
         ],
     )
 
-    tabs = st.tabs(["Phrases", "Co-occurrence", "TF-IDF", "Similarity", "Clusters", "ESG Tone", "Context"])
+    view_mode = st.selectbox(
+        "Visualization",
+        [
+            "Phrase Mining",
+            "Keyword Co-occurrence",
+            "TF-IDF Terms",
+            "Cosine Similarity",
+            "Chunk Clusters",
+            "ESG Tone",
+            "Keyword Context",
+        ],
+        index=0,
+    )
 
-    with tabs[0]:
+    if view_mode == "Phrase Mining":
         st.markdown("### Phrase Mining")
         st.caption("This view counts repeated two-word or three-word expressions in the filtered chunks.")
         _plot_phrase_bar(st, phrase_df, f"Top {ngram_label} in Filtered ESG Text")
 
-    with tabs[1]:
+    elif view_mode == "Keyword Co-occurrence":
         st.markdown("### Keyword Co-occurrence")
         left, right = st.columns([1.1, 1])
         with left:
@@ -957,7 +969,7 @@ def render_page(
         with right:
             _plot_pair_heatmap(st, pair_df, top_pairs=top_n)
 
-    with tabs[2]:
+    elif view_mode == "TF-IDF Terms":
         st.markdown("### TF-IDF Group Comparison")
         st.caption(
             "This view highlights terms that are distinctive for each selected grouping, rather than merely frequent overall."
@@ -967,12 +979,12 @@ def render_page(
             st.markdown("**Top Terms Table**")
             st.dataframe(tfidf_df, use_container_width=True, hide_index=True)
 
-    with tabs[3]:
+    elif view_mode == "Cosine Similarity":
         st.markdown("### Cosine Similarity")
         st.caption("Groups with similar TF-IDF vocabularies receive higher similarity scores.")
         _plot_similarity_heatmap(st, similarity_df)
 
-    with tabs[4]:
+    elif view_mode == "Chunk Clusters":
         st.markdown("### TF-IDF Chunk Clustering")
         st.caption("Each point is one report chunk. Nearby points use similar vocabulary after TF-IDF vectorization.")
         _plot_cluster_scatter(st, cluster_df)
@@ -980,7 +992,7 @@ def render_page(
             st.markdown("**Cluster Interpretation Table**")
             st.dataframe(cluster_summary_df, use_container_width=True, hide_index=True)
 
-    with tabs[5]:
+    elif view_mode == "ESG Tone":
         st.markdown("### ESG Tone Heatmap")
         st.caption("Scores are lexicon hits per 1,000 tokens, grouped by section unless an SDG filter is active.")
         _plot_tone_heatmap(st, tone_df, "ESG Language Frames by Group")
@@ -991,7 +1003,7 @@ def render_page(
                 f"{strongest_tone['tone']} language ({strongest_tone['score']} terms per 1,000 tokens)."
             )
 
-    with tabs[6]:
+    elif view_mode == "Keyword Context":
         st.markdown("### Keyword Context Explorer")
         keyword_options = term_df["term"].tolist()
         if not keyword_options:
