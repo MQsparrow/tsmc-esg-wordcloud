@@ -1,0 +1,91 @@
+orientation,term,tfidf_score
+action_oriented,target,0.32100737115808575
+action_oriented,reduction,0.2700238475035663
+action_oriented,renewable,0.21337548788743346
+action_oriented,efficiency,0.2095989305796913
+action_oriented,renewable energy,0.19071614404098036
+action_oriented,local,0.1850513080793671
+action_oriented,committee,0.17372163615614053
+action_oriented,energy save,0.15295057096355852
+action_oriented,raw material,0.13595606307871866
+action_oriented,response,0.12273811250162103
+action_oriented,vendor,0.12084983384774993
+action_oriented,optimize,0.1057436046167812
+action_oriented,director,0.1038553259629101
+action_oriented,tax,0.10007876865516792
+action_oriented,net,0.09819049000129682
+action_oriented,air pollution,0.09630221134742574
+action_oriented,conservation,0.09441393269355464
+action_oriented,volunteer,0.08874909673194135
+action_oriented,audit,0.08686081807807026
+action_oriented,gwh,0.08497253942419918
+action_oriented,benefit,0.08497253942419918
+action_oriented,factory,0.0793077034625859
+action_oriented,culture,0.0774194248087148
+action_oriented,carbon reduction,0.0774194248087148
+action_oriented,carbon emission,0.07364286750097261
+action_oriented,climate change,0.07364286750097261
+action_oriented,substance,0.06986631019323043
+action_oriented,regulation,0.06986631019323043
+action_oriented,generation,0.06986631019323043
+action_oriented,continuous,0.06797803153935933
+mixed,dnv,0.5263157894736854
+mixed,english,0.2631578947368427
+mixed,fabs,0.15789473684210562
+mixed,unit metric,0.13157894736842135
+mixed,liquid,0.13157894736842135
+mixed,dnv assurance,0.10526315789473709
+mixed,sustainable performance,0.10526315789473709
+mixed,build sustainable,0.10526315789473709
+mixed,waste liquid,0.10526315789473709
+mixed,hand tool,0.10526315789473709
+mixed,metric metric,0.07894736842105281
+mixed,star program,0.07894736842105281
+mixed,dock,0.07894736842105281
+mixed,scrub,0.07894736842105281
+mixed,charge,0.07894736842105281
+mixed,water balance,0.07894736842105281
+mixed,key field,0.07894736842105281
+mixed,development discussion,0.07894736842105281
+mixed,tank,0.07894736842105281
+mixed,development industry,0.07894736842105281
+mixed,development need,0.07894736842105281
+mixed,sop,0.07894736842105281
+mixed,river,0.07894736842105281
+mixed,emission emission,0.07894736842105281
+mixed,emission intensity,0.05263157894736854
+mixed,collaboration industry,0.05263157894736854
+mixed,operating personnel,0.05263157894736854
+mixed,water management,0.05263157894736854
+mixed,site operating,0.05263157894736854
+mixed,water reclamation,0.05263157894736854
+people_centric,occupational,0.21075792073863003
+people_centric,culture,0.19533660946507175
+people_centric,target,0.1619237683723621
+people_centric,response,0.15421311273558297
+people_centric,senior,0.14393223855321077
+people_centric,number,0.13365136437083855
+people_centric,benefit,0.13365136437083855
+people_centric,people,0.13365136437083855
+people_centric,committee,0.13365136437083855
+people_centric,compensation,0.13108114582524552
+people_centric,audit,0.12851092727965246
+people_centric,survey,0.12851092727965246
+people_centric,director,0.12337049018846637
+people_centric,engagement,0.12080027164287332
+people_centric,diversity,0.11565983455168723
+people_centric,care,0.11308961600609418
+people_centric,volunteer,0.10537896036931502
+people_centric,receive,0.10280874182372197
+people_centric,art,0.10280874182372197
+people_centric,inclusion,0.10280874182372197
+people_centric,invite,0.10280874182372197
+people_centric,culture foundation,0.10023852327812893
+people_centric,practice,0.08995764909575672
+people_centric,education culture,0.08995764909575672
+people_centric,core,0.08738743055016368
+people_centric,audits,0.08738743055016368
+people_centric,promotion,0.08738743055016368
+people_centric,policy,0.08224699345897758
+people_centric,regulation,0.08224699345897758
+people_centric,significant,0.07967677491338453

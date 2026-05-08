@@ -1,0 +1,181 @@
+issue_frame,term,tfidf_score
+environment,water,0.4178440450607071
+environment,energy,0.3637914161013256
+environment,supplier,0.24678823092279112
+environment,waste,0.22201522830201056
+environment,carbon,0.2084426492256244
+environment,emission,0.2054929890950731
+environment,renewable,0.18884538884826968
+environment,renewable energy,0.16996084996344274
+environment,reduction,0.16394970705379242
+environment,supply,0.15043266665811572
+environment,risk,0.12191928539611992
+environment,save,0.12068520102570833
+environment,climate,0.1127154235994823
+environment,chain,0.11110386491743186
+environment,consumption,0.10127166448226091
+environment,gas,0.09905294801166627
+environment,supply chain,0.09537234422115833
+environment,wastewater,0.09034721030680869
+environment,energy save,0.08994463095312223
+environment,recycling,0.0863613039697436
+environment,metric,0.08539047242385023
+environment,project,0.08455692374247027
+environment,air,0.08425193279153223
+environment,pollution,0.08062404356840189
+environment,ghg,0.07855923462994222
+environment,recycle,0.07307494951285996
+environment,control,0.07177506317674802
+environment,facility,0.07079184313323093
+environment,equipment,0.06980862308971382
+environment,carbon reduction,0.06766959767062998
+governance_risk,risk,0.3645456893469614
+governance_risk,committee,0.36248982102861216
+governance_risk,tax,0.2972448078265069
+governance_risk,governance,0.21377604829892513
+governance_risk,board,0.2097857268883457
+governance_risk,security,0.19259017550405505
+governance_risk,director,0.1822728446734807
+governance_risk,human,0.15819907273547382
+governance_risk,risk management,0.15132085218175756
+governance_risk,right,0.14788174190489944
+governance_risk,corporate,0.14788174190489944
+governance_risk,human right,0.13540117980884014
+governance_risk,development,0.12380796996689256
+governance_risk,climate,0.12345401688453073
+governance_risk,compliance,0.10354207867734834
+governance_risk,board director,0.10224071875165985
+governance_risk,issue,0.09629508775202753
+governance_risk,corporate governance,0.0929461079560544
+governance_risk,supplier,0.08597775692145317
+governance_risk,nominate,0.07706346869576104
+governance_risk,risk committee,0.07706346869576104
+governance_risk,chairman,0.07566536518729303
+governance_risk,stakeholder,0.07566042609087878
+governance_risk,framework,0.07222131581402066
+governance_risk,reporting,0.07168297754585654
+governance_risk,audit risk,0.0715589352174924
+governance_risk,regulatory,0.06770058990442007
+governance_risk,ethic,0.06770058990442007
+governance_risk,gri,0.06605440173922375
+governance_risk,policy,0.0653430952603044
+innovation,university,0.23144645401074915
+innovation,student,0.21652857013954474
+innovation,advanced,0.18654769119714623
+innovation,patent,0.1851571632085993
+innovation,development,0.15656681225474775
+innovation,production,0.1432419771692373
+innovation,science,0.1432419771692373
+innovation,application,0.13324835085510447
+innovation,school,0.13115299060609117
+innovation,energy,0.12991714208372687
+innovation,chip,0.12325472454097162
+innovation,research,0.11186578610519542
+innovation,alliance,0.10800834520501627
+innovation,equipment,0.10326747191270595
+innovation,talent,0.09993626314132836
+innovation,project,0.08994263682719551
+innovation,innovative,0.08661142805581791
+innovation,tag,0.0853092746855546
+innovation,high school,0.08486369980394136
+innovation,packaging,0.0832802192844403
+innovation,smart,0.0832802192844403
+innovation,process technology,0.0832802192844403
+innovation,academia,0.08100625890376219
+innovation,save,0.07714881800358304
+innovation,enhance,0.07661780174168507
+innovation,capacity,0.07661780174168507
+innovation,supply,0.07661780174168507
+innovation,industry academia,0.07329137710340389
+innovation,trade_secret,0.07202395158354306
+innovation,control,0.06995538419892985
+labor_talent,health,0.30979172592140664
+labor_talent,safety,0.28249730073009327
+labor_talent,supplier,0.20607291019441587
+labor_talent,risk,0.17468432122440553
+labor_talent,injury,0.17256211848580738
+labor_talent,student,0.15557822359048618
+labor_talent,development,0.15148405981178917
+labor_talent,talent,0.14875461729265782
+labor_talent,learn,0.14602517477352647
+labor_talent,occupational,0.14568879776304022
+labor_talent,safety health,0.1374866845580364
+labor_talent,contractor,0.12800484424368908
+labor_talent,improvement,0.11054242202481912
+labor_talent,workplace,0.1023540944674251
+labor_talent,diversity,0.10047920823224227
+labor_talent,job,0.09405226184702598
+labor_talent,school,0.09323809642441548
+labor_talent,learning,0.09220809985002545
+labor_talent,chemical,0.09165778970535761
+labor_talent,compensation,0.09036393785302496
+labor_talent,university,0.09007748298629971
+labor_talent,disease,0.08955755516352028
+labor_talent,construction,0.08667561385902392
+labor_talent,career,0.07929896587102189
+labor_talent,issue,0.07915383305480875
+labor_talent,measure,0.0764243905356774
+labor_talent,inclusion,0.07376647988002037
+labor_talent,diverse,0.07369494801654607
+labor_talent,female,0.07369494801654607
+labor_talent,conduct,0.0723302267569804
+other,art,0.34033364385479464
+other,participant,0.22710865986039439
+other,dnv,0.21663126234077493
+other,educational,0.18563653301170616
+other,literature,0.18052605195064578
+other,dividend,0.15469711084308846
+other,culture foundation,0.14695266226260814
+other,competition,0.14695266226260814
+other,education culture,0.14695266226260814
+other,youth,0.14442084156051663
+other,art cultural,0.14442084156051663
+other,cultural,0.13922739975877962
+other,chinese,0.13359332932964377
+other,cash dividend,0.12636823636545205
+other,sponsor,0.12375768867447078
+other,volunteer,0.12375768867447078
+other,lecture,0.12375768867447078
+other,assurance,0.12375768867447078
+other,cash,0.1202339963966794
+other,young,0.10828797759016194
+other,cultural event,0.10691267429205628
+other,build sustainable,0.08553013943364503
+other,artist,0.08553013943364503
+other,dnv assurance,0.08553013943364503
+other,2024,0.08553013943364503
+other,sustainable performance,0.08553013943364503
+other,student,0.08015599759778626
+other,beneficiary,0.07734855542154423
+other,school,0.07734855542154423
+other,promote art,0.07221042078025831
+supply_chain,supplier,0.6177948413585891
+supply_chain,raw,0.20593161378619634
+supply_chain,supply,0.18064176647911961
+supply_chain,risk,0.18064176647911961
+supply_chain,raw material,0.1770289311495372
+supply_chain,chain,0.16619042516079002
+supply_chain,supply chain,0.1372877425241309
+supply_chain,improvement,0.1336749071945485
+supply_chain,security,0.12283640120580132
+supply_chain,source,0.12283640120580132
+supply_chain,audit,0.11199789521705414
+supply_chain,production,0.10115938922830697
+supply_chain,waste,0.09203823413444023
+supply_chain,mineral,0.08787711355095887
+supply_chain,tcia,0.08787711355095887
+supply_chain,chemical,0.0836711219404002
+supply_chain,project,0.08309521258039501
+supply_chain,procurement,0.07948756584338021
+supply_chain,safety,0.07948237725081263
+supply_chain,establish,0.07586954192123023
+supply_chain,part,0.07530400974636019
+supply_chain,material supplier,0.07225670659164783
+supply_chain,major,0.07225670659164783
+supply_chain,reliability,0.06864387126206545
+supply_chain,advanced,0.06864387126206545
+supply_chain,control,0.06503103593248306
+supply_chain,spare part,0.06360851663488619
+supply_chain,spare,0.06360851663488619
+supply_chain,development,0.06141820060290066
+supply_chain,inspection,0.05858474236730591

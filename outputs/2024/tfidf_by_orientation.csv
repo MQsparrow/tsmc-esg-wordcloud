@@ -1,0 +1,91 @@
+orientation,term,tfidf_score
+action_oriented,major,0.22411876460883107
+action_oriented,safety,0.19476987876719842
+action_oriented,operational,0.17075715398768082
+action_oriented,complete,0.1680890734566233
+action_oriented,applicable,0.16542099292556578
+action_oriented,carbon reduction,0.1467444292081632
+action_oriented,audit,0.14407634867710567
+action_oriented,acid,0.13073594602181812
+action_oriented,substance,0.1253997849597031
+action_oriented,tax,0.11739554336653056
+action_oriented,regulation,0.11739554336653056
+action_oriented,inspection,0.1067232212423005
+action_oriented,image,0.1067232212423005
+action_oriented,reclaim,0.104055140711243
+action_oriented,monitoring,0.09871897964912797
+action_oriented,equivalent,0.09871897964912797
+action_oriented,personnel,0.09605089911807045
+action_oriented,reuse,0.09605089911807045
+action_oriented,indicator,0.09605089911807045
+action_oriented,revenue,0.08537857699384041
+action_oriented,reclaim water,0.08271049646278289
+action_oriented,specific,0.08271049646278289
+action_oriented,energy efficiency,0.08004241593172538
+action_oriented,art,0.08004241593172538
+action_oriented,flow,0.07737433540066788
+action_oriented,track,0.07470625486961037
+action_oriented,competition,0.07203817433855284
+action_oriented,mask,0.07203817433855284
+action_oriented,carbon emission,0.07203817433855284
+action_oriented,reduction rate,0.06937009380749533
+mixed,reclaim,0.2815812953481983
+mixed,reclaim water,0.2413553960127414
+mixed,reasonable,0.2011294966772845
+mixed,patent application,0.1609035973418276
+mixed,kwh,0.14079064767409916
+mixed,consecutive,0.14079064767409916
+mixed,fabs,0.14079064767409916
+mixed,unit metric,0.1206776980063707
+mixed,reuse,0.1206776980063707
+mixed,co2e,0.1206776980063707
+mixed,leadership award,0.10056474833864225
+mixed,help customer,0.10056474833864225
+mixed,waste manufacturing,0.10056474833864225
+mixed,ecology,0.10056474833864225
+mixed,ranking,0.10056474833864225
+mixed,co2e kwh,0.10056474833864225
+mixed,ifrs,0.0804517986709138
+mixed,oxide,0.0804517986709138
+mixed,power consumption,0.0804517986709138
+mixed,die,0.0804517986709138
+mixed,build sustainable,0.0804517986709138
+mixed,water quality,0.0804517986709138
+mixed,advanced backend,0.0804517986709138
+mixed,american,0.0804517986709138
+mixed,sell,0.0804517986709138
+mixed,introduce reclaim,0.06033884900318535
+mixed,biomedical,0.06033884900318535
+mixed,professional professional,0.06033884900318535
+mixed,grade chemical,0.06033884900318535
+mixed,materiality analysis,0.06033884900318535
+people_centric,safety,0.5472846769079767
+people_centric,safety health,0.19197944163787664
+people_centric,care,0.15472969923052743
+people_centric,construction,0.15472969923052743
+people_centric,learning,0.1404028752277008
+people_centric,complete,0.1375375104271355
+people_centric,people,0.12894141602543954
+people_centric,person,0.12321068642430888
+people_centric,audit,0.11747995682317824
+people_centric,tier,0.10601849762091696
+people_centric,esh,0.10601849762091696
+people_centric,compliance,0.10315313282035161
+people_centric,labor,0.10315313282035161
+people_centric,art,0.09169167361809033
+people_centric,occupational safety,0.08882630881752501
+people_centric,workshop,0.08882630881752501
+people_centric,ethic,0.0859609440169597
+people_centric,major,0.08309557921639438
+people_centric,emergency,0.08023021441582905
+people_centric,personnel,0.0744994848146984
+people_centric,donation,0.07163412001413308
+people_centric,vice,0.07163412001413308
+people_centric,president,0.07163412001413308
+people_centric,significant supplier,0.07163412001413308
+people_centric,tier supplier,0.07163412001413308
+people_centric,check,0.07163412001413308
+people_centric,completion,0.06876875521356775
+people_centric,health management,0.06876875521356775
+people_centric,regulatory,0.06876875521356775
+people_centric,child,0.06590339041300243

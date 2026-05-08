@@ -975,3 +975,77 @@ def save_outputs(
         "issue_frame_by_section": issue_frame_by_section,
         "issue_frame_cooccurrence": issue_frame_cooccurrence,
     }
+
+
+def process_all_years(output_base_dir: str = "outputs") -> dict[str, dict]:
+    """
+    Process all available TSMC reports (2022, 2023, 2024).
+    Each year's outputs are saved to {output_base_dir}/{year}/ subdirectory.
+    
+    Returns:
+        dict mapping year -> {chunks_df, outputs_dict, log_info}
+    """
+    from src.extract_pdf import extract_all_pdfs
+    
+    # Extract PDFs to text files
+    print("=== Extracting PDFs ===")
+    report_files = extract_all_pdfs()
+    
+    if not report_files:
+        raise FileNotFoundError("No TSMC reports found. Ensure PDFs are in data/raw/")
+    
+    # Create output base directory
+    output_base = Path(output_base_dir)
+    output_base.mkdir(parents=True, exist_ok=True)
+    
+    # Load spaCy model once (reuse for all years)
+    print("Loading spaCy model...")
+    nlp = load_spacy_model("en_core_web_sm")
+    
+    # Process each year
+    all_results = {}
+    for year in sorted(report_files.keys()):
+        text_path = report_files[year]
+        year_output_dir = output_base / year
+        year_output_dir.mkdir(parents=True, exist_ok=True)
+        
+        print(f"\n{'='*60}")
+        print(f"Processing {year}: {text_path}")
+        print(f"Output directory: {year_output_dir}")
+        print(f"{'='*60}")
+        
+        raw_text = text_path.read_text(encoding="utf-8")
+        df_chunks = run_pipeline(raw_text, nlp)
+        outputs = save_outputs(df_chunks, output_dir=str(year_output_dir))
+        
+        # Generate sentence embeddings for each chunk
+        from src.embeddings import EmbeddingPipeline
+        embedding_pipeline = EmbeddingPipeline()
+        clean_texts = df_chunks['clean_text'].fillna('').tolist()
+        embeddings = embedding_pipeline.encode_texts(clean_texts)
+        embedding_path = year_output_dir / 'chunk_embeddings.npz'
+        embedding_pipeline.save_embeddings(embeddings, embedding_path)
+        print(f"  - Saved {embeddings.shape[0]} chunk embeddings to {embedding_path}")
+        
+        all_results[year] = {
+            "chunks": df_chunks,
+            "outputs": outputs,
+            "embeddings_path": str(embedding_path),
+            "output_dir": str(year_output_dir),
+            "text_path": str(text_path),
+        }
+        
+        print(f"\n{year} Summary:")
+        print(f"  - Chunks: {len(df_chunks)}")
+        print(f"  - Section distribution: {dict(df_chunks['section_label'].value_counts())}")
+        print(f"  - SDG count: {df_chunks['sdg_labels'].str.split(',').explode().str.strip().nunique()}")
+    
+    # Final summary
+    print(f"\n\n{'='*60}")
+    print("SUMMARY: All years processed successfully")
+    print(f"{'='*60}")
+    for year in sorted(all_results.keys()):
+        result = all_results[year]
+        print(f"{year}: {len(result['chunks'])} chunks → {result['output_dir']}/")
+    
+    return all_results

@@ -1,0 +1,181 @@
+section_label,term,tfidf_score
+environment,water,0.3421424886661183
+environment,energy,0.3175082294821578
+environment,waste,0.27493859975448937
+environment,carbon,0.22292338405673892
+environment,supplier,0.21349691292765782
+environment,emission,0.20496273226069833
+environment,reduction,0.16696553446906573
+environment,management,0.1541922148921973
+environment,resource,0.12682081579890783
+environment,recycling,0.11390551723268465
+environment,supply,0.1122227362824868
+environment,impact,0.10857321640338154
+environment,metric,0.10674845646382891
+environment,consumption,0.10670740184706459
+environment,climate,0.10248136613034917
+environment,wastewater,0.09986559004535263
+environment,risk,0.09762465676606574
+environment,chain,0.0948875168567368
+environment,environmental,0.09397513688696049
+environment,industry,0.09306275691718417
+environment,efficiency,0.08485133718919734
+environment,save,0.08260487077825464
+environment,wafer,0.08028943734031575
+environment,green,0.07846467740076313
+environment,power,0.07755229743098681
+environment,material,0.07755229743098681
+environment,reclaim,0.07593701148845643
+environment,production,0.07395562504252001
+environment,carbon reduction,0.07274160262562722
+environment,project,0.07207801761232892
+governance,management,0.39634989856211184
+governance,risk,0.3690154227992076
+governance,committee,0.2215675822816246
+governance,director,0.20890657757981748
+governance,board,0.19941082405346214
+governance,patent,0.19941082405346214
+governance,tax,0.166218123118161
+governance,risk management,0.1424363028953301
+governance,supplier,0.12027169335677879
+governance,governance,0.12027169335677879
+governance,development,0.10933790305161707
+governance,climate,0.10445328878990874
+governance,impact,0.09840411274645537
+governance,employee,0.09812278643900518
+governance,issue,0.09567066517016494
+governance,human,0.08473687486500323
+governance,industry,0.08473687486500323
+governance,compliance,0.08229653056174628
+governance,relate,0.07926997971242238
+governance,right,0.07926997971242238
+governance,material,0.07653653213613194
+governance,production,0.07280077703539094
+governance,financial,0.0710696369835511
+governance,compensation,0.0710696369835511
+governance,board director,0.07018098531655688
+governance,corporate governance,0.07018098531655688
+governance,organization,0.06833618940726068
+governance,policy,0.06560274183097024
+governance,disclosure,0.06330502350903561
+governance,control,0.06286929425467981
+other,wafer,0.2451151853493922
+other,satisfaction,0.220603666814453
+other,technician,0.19873601581598316
+other,customer trust,0.17158062974457453
+other,trust satisfaction,0.1703016663523115
+other,flaw,0.15692951201557695
+other,major flaw,0.15692951201557695
+other,meeting customer,0.15692951201557695
+other,engineering quality,0.15692951201557695
+other,assistant,0.14706911120963534
+other,professional,0.14706911120963534
+other,customer product,0.14191805529359292
+other,customer service,0.14191805529359292
+other,service team,0.13249067721065544
+other,provide wafer,0.11769713401168272
+other,process provide,0.11769713401168272
+other,professional professional,0.11769713401168272
+other,technology advanced,0.11769713401168272
+other,ship,0.11769713401168272
+other,reduce case,0.11769713401168272
+other,wafer ship,0.11769713401168272
+other,satisfaction rating,0.11769713401168272
+other,technology line,0.09936800790799158
+other,line technology,0.09936800790799158
+other,product security,0.09936800790799158
+other,advanced backend,0.09936800790799158
+other,north,0.09936800790799158
+other,pass customer,0.09936800790799158
+other,rating,0.09804607413975688
+other,inch,0.09804607413975688
+social,foundation,0.2904613429998854
+social,education,0.236672205407314
+social,volunteer,0.2259720698091041
+social,resource,0.17961139508844787
+social,student,0.16722440232372732
+social,charity,0.15901738245825844
+social,art,0.15483271449883057
+social,care,0.14343770024685698
+social,cultural,0.14343770024685698
+social,program,0.13935366860310613
+social,donation,0.1338271016152698
+social,senior,0.1326798727283427
+social,culture,0.12386992764720543
+social,director,0.11475016019748557
+social,industry,0.1114829348824849
+social,culture foundation,0.10880136694512417
+social,school,0.10838618669130476
+social,educational,0.10757827518514274
+social,health,0.10528943850012461
+social,charity foundation,0.10461669898569632
+social,education culture,0.10043203102626848
+social,committee,0.09682044766662845
+social,serve,0.09599919392658421
+social,social,0.09599919392658421
+social,participant,0.09599919392658421
+social,project,0.09290244573540409
+social,promote,0.09290244573540409
+social,activity,0.08980569754422393
+social,community,0.08964856265428561
+social,time,0.0867089493530438
+supply_chain,supplier,0.5998966599576081
+supply_chain,material,0.25370079011423075
+supply_chain,raw,0.2080927401670163
+supply_chain,risk,0.19291830914936295
+supply_chain,management,0.18763287602198314
+supply_chain,raw material,0.1836112413238379
+supply_chain,supply,0.17177657663984372
+supply_chain,chain,0.15063484413032452
+supply_chain,audit,0.14006397787556488
+supply_chain,supply chain,0.12949311162080526
+supply_chain,source,0.12240749421589193
+supply_chain,production,0.08874543330652165
+supply_chain,local,0.08720964660176682
+supply_chain,program,0.0766387803470072
+supply_chain,material supplier,0.07650468388493245
+supply_chain,equipment,0.07650468388493245
+supply_chain,substance,0.07499373652330057
+supply_chain,procurement,0.07499373652330057
+supply_chain,fire,0.07499373652330057
+supply_chain,safety,0.07399606378331729
+supply_chain,right,0.07399606378331729
+supply_chain,tcia,0.07190745590130616
+supply_chain,human,0.06606791409224759
+supply_chain,significant supplier,0.0642803455914005
+supply_chain,mineral,0.06344775520703484
+supply_chain,project,0.06342519752855769
+supply_chain,significant,0.06342519752855769
+supply_chain,complete,0.06078248096486778
+supply_chain,environmental,0.06078248096486778
+supply_chain,human right,0.06078248096486778
+talent,employee,0.5489704981726166
+talent,management,0.23839966236615773
+talent,health,0.1758537433423369
+talent,program,0.17404081815324066
+talent,safety,0.17313435555869253
+talent,student,0.12690476323673797
+talent,work,0.1250918380476417
+talent,talent,0.12418537545309358
+talent,development,0.11693367469670857
+talent,workplace,0.10786904875122727
+talent,learn,0.10411754622589627
+talent,training,0.10061734799484225
+talent,university,0.09309333544903667
+talent,total,0.09245918464390908
+talent,risk,0.09155272204936096
+talent,education,0.09027048344712242
+talent,injury,0.08414964662799837
+talent,learning,0.08414964662799837
+talent,occupational,0.08329403698071701
+talent,course,0.07886224572568717
+talent,industry,0.07886224572568717
+talent,contractor,0.07704932053659092
+talent,resource,0.07523639534749466
+talent,school,0.0734234701583984
+talent,culture,0.06979761978020588
+talent,chemical,0.06822769097747626
+talent,equipment,0.06717803419320739
+talent,offer,0.06435884421291711
+talent,supplier,0.06254591902382085
+talent,participant,0.061639456429272724
