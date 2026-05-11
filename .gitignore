@@ -40,7 +40,13 @@ outputs/finbert_*.csv
 outputs/weak_eval_*.csv
 outputs/weak_eval_*.json
 outputs/concreteness_detection_metrics.csv
+outputs/concreteness_detection_metrics_multiyear.csv
 outputs/coverage_concreteness_by_sdg.csv
+outputs/coverage_concreteness_by_sdg_multiyear.csv
+outputs/sdg_tuned_thresholds.csv
+outputs/sdg_tuned_thresholds_multiyear.csv
+outputs/bert_experiment_model_summary.csv
+outputs/bert_experiment_model_summary_multiyear.csv
 
 # Generated BERT / FinBERT figures
 # pic/bert_*.png

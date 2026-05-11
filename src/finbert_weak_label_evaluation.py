@@ -8,6 +8,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from scipy import sparse
 from sklearn.dummy import DummyClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
@@ -18,12 +19,19 @@ from sklearn.pipeline import make_pipeline
 
 
 CHUNKS_CSV = Path("outputs/chunks_processed.csv")
+MULTI_YEAR_CHUNK_PATHS = [
+    Path("outputs/2022/chunks_processed.csv"),
+    Path("outputs/2023/chunks_processed.csv"),
+    Path("outputs/2024/chunks_processed.csv"),
+]
 OUTPUTS_DIR = Path("outputs")
 PIC_DIR = Path("pic")
 WEAK_LABELS_CSV = OUTPUTS_DIR / "weak_eval_labels.csv"
 DEFAULT_FINBERT_MODEL = "ProsusAI/finbert"
 MIN_TEXT_CHARS = 40
 RANDOM_STATE = 42
+VALIDATION_SIZE = 0.25
+THRESHOLD_GRID = np.arange(0.15, 0.86, 0.05)
 
 SDG_LABELS = [
     "SDG3_health",
@@ -129,7 +137,15 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Only generate/load weak labels, then stop before model evaluation.",
     )
-    return parser.parse_args()
+    parser.add_argument(
+        "--multi-year",
+        action="store_true",
+        help="Use outputs/2022, outputs/2023, and outputs/2024 chunks together.",
+    )
+    args = parser.parse_args()
+    if args.multi_year and args.label_file == WEAK_LABELS_CSV:
+        args.label_file = OUTPUTS_DIR / "weak_eval_labels_multiyear.csv"
+    return args
 
 
 def parse_sdg_labels(value: object) -> list[str]:
@@ -165,8 +181,29 @@ def concreteness_score(text: str) -> float:
     return float(np.clip(score, 0.0, 1.0))
 
 
-def generate_weak_labels(chunks_path: Path, output_path: Path) -> pd.DataFrame:
-    df = pd.read_csv(chunks_path)
+def load_chunk_data(chunks_path: Path, multi_year: bool) -> pd.DataFrame:
+    if not multi_year:
+        df = pd.read_csv(chunks_path)
+        if "year" not in df.columns:
+            df["year"] = "2024"
+        df["source_chunk_id"] = df["chunk_id"]
+        return df
+
+    frames = []
+    for path in MULTI_YEAR_CHUNK_PATHS:
+        if not path.exists():
+            raise FileNotFoundError(f"Missing multi-year chunk file: {path}")
+        year = path.parts[-2]
+        frame = pd.read_csv(path)
+        frame["year"] = year
+        frame["source_chunk_id"] = frame["chunk_id"]
+        frame["chunk_id"] = frame["year"].astype(str) + "_" + frame["source_chunk_id"].astype(str)
+        frames.append(frame)
+    return pd.concat(frames, ignore_index=True)
+
+
+def generate_weak_labels(chunks_path: Path, output_path: Path, multi_year: bool) -> pd.DataFrame:
+    df = load_chunk_data(chunks_path, multi_year)
     records = []
 
     for _, row in df.iterrows():
@@ -179,6 +216,8 @@ def generate_weak_labels(chunks_path: Path, output_path: Path) -> pd.DataFrame:
         score = concreteness_score(concreteness_text)
         record = {
             "chunk_id": row.get("chunk_id"),
+            "year": row.get("year", "2024"),
+            "source_chunk_id": row.get("source_chunk_id", row.get("chunk_id")),
             "text": text,
             "weak_primary_sdg": labels[0] if labels else "unclassified",
             "weak_concreteness_score": round(score, 4),
@@ -200,7 +239,7 @@ def load_or_generate_labels(args: argparse.Namespace) -> pd.DataFrame:
     if args.label_file.exists() and not args.force_labels:
         print(f"Loading weak labels from {args.label_file}")
         return pd.read_csv(args.label_file)
-    return generate_weak_labels(args.chunks, args.label_file)
+    return generate_weak_labels(args.chunks, args.label_file, args.multi_year)
 
 
 def valid_label_columns(labels_df: pd.DataFrame) -> list[str]:
@@ -242,6 +281,18 @@ def split_data(labels_df: pd.DataFrame, test_size: float) -> tuple[pd.DataFrame,
     return train_df.reset_index(drop=True), test_df.reset_index(drop=True)
 
 
+def split_train_validation(train_df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    concrete = train_df["weak_concrete"]
+    stratify = concrete if concrete.nunique() == 2 and concrete.value_counts().min() >= 2 else None
+    inner_train, validation = train_test_split(
+        train_df,
+        test_size=VALIDATION_SIZE,
+        random_state=RANDOM_STATE,
+        stratify=stratify,
+    )
+    return inner_train.reset_index(drop=True), validation.reset_index(drop=True)
+
+
 def evaluate_multilabel_predictions(
     y_true: pd.DataFrame,
     y_pred: np.ndarray,
@@ -276,6 +327,26 @@ def evaluate_multilabel_predictions(
             "support": int(y_true[labels].values.sum()),
         }
     )
+    rows.append(
+        {
+            "model": model_name,
+            "sdg": "MICRO_AVERAGE",
+            "precision": np.nan,
+            "recall": np.nan,
+            "f1": round(float(f1_score(y_true[labels].values, y_pred, average="micro", zero_division=0)), 4),
+            "support": int(y_true[labels].values.sum()),
+        }
+    )
+    rows.append(
+        {
+            "model": model_name,
+            "sdg": "WEIGHTED_AVERAGE",
+            "precision": np.nan,
+            "recall": np.nan,
+            "f1": round(float(f1_score(y_true[labels].values, y_pred, average="weighted", zero_division=0)), 4),
+            "support": int(y_true[labels].values.sum()),
+        }
+    )
     return pd.DataFrame(rows)
 
 
@@ -298,6 +369,56 @@ def fit_tfidf_sdg_classifier(
     )
     classifier.fit(train_df["text"], train_df[labels])
     return classifier.predict(test_df["text"]), classifier
+
+
+def tune_thresholds(y_true: np.ndarray, probabilities: np.ndarray) -> np.ndarray:
+    thresholds = []
+    for col in range(y_true.shape[1]):
+        best_threshold = 0.50
+        best_f1 = -1.0
+        for threshold in THRESHOLD_GRID:
+            pred = (probabilities[:, col] >= threshold).astype(int)
+            score = f1_score(y_true[:, col], pred, zero_division=0)
+            if score > best_f1:
+                best_f1 = score
+                best_threshold = float(threshold)
+        thresholds.append(best_threshold)
+    return np.array(thresholds)
+
+
+def fit_tuned_binary_classifiers(
+    x_train,
+    y_train: pd.DataFrame,
+    x_validation,
+    y_validation: pd.DataFrame,
+    x_test,
+    labels: list[str],
+) -> tuple[np.ndarray, pd.DataFrame]:
+    probabilities_validation = []
+    probabilities_test = []
+
+    for sdg in labels:
+        target_train = y_train[sdg].values
+        if len(np.unique(target_train)) < 2:
+            clf = DummyClassifier(strategy="most_frequent")
+        else:
+            clf = LogisticRegression(max_iter=1000, class_weight="balanced", random_state=RANDOM_STATE)
+        clf.fit(x_train, target_train)
+
+        if hasattr(clf, "predict_proba") and len(getattr(clf, "classes_", [])) == 2:
+            probabilities_validation.append(clf.predict_proba(x_validation)[:, 1])
+            probabilities_test.append(clf.predict_proba(x_test)[:, 1])
+        else:
+            probabilities_validation.append(clf.predict(x_validation))
+            probabilities_test.append(clf.predict(x_test))
+
+    validation_matrix = np.vstack(probabilities_validation).T
+    test_matrix = np.vstack(probabilities_test).T
+    thresholds = tune_thresholds(y_validation[labels].values, validation_matrix)
+    predictions = (test_matrix >= thresholds).astype(int)
+
+    threshold_df = pd.DataFrame({"sdg": labels, "threshold": thresholds.round(3)})
+    return predictions, threshold_df
 
 
 def mean_pool_embeddings(last_hidden_state, attention_mask):
@@ -375,6 +496,65 @@ def fit_embedding_sdg_classifier(
     return np.vstack(predictions).T
 
 
+def fit_tuned_embedding_sdg_classifier(
+    train_df: pd.DataFrame,
+    test_df: pd.DataFrame,
+    embeddings: np.ndarray,
+    labels: list[str],
+) -> tuple[np.ndarray, pd.DataFrame]:
+    inner_train, validation = split_train_validation(train_df)
+    return fit_tuned_binary_classifiers(
+        embeddings[inner_train["_row_id"].values],
+        inner_train[labels],
+        embeddings[validation["_row_id"].values],
+        validation[labels],
+        embeddings[test_df["_row_id"].values],
+        labels,
+    )
+
+
+def fit_hybrid_sdg_classifier(
+    train_df: pd.DataFrame,
+    test_df: pd.DataFrame,
+    embeddings: np.ndarray,
+    labels: list[str],
+) -> tuple[np.ndarray, pd.DataFrame]:
+    inner_train, validation = split_train_validation(train_df)
+
+    vectorizer = TfidfVectorizer(
+        stop_words="english",
+        ngram_range=(1, 2),
+        min_df=2,
+        max_df=0.90,
+        max_features=6000,
+    )
+    x_train_tfidf = vectorizer.fit_transform(inner_train["text"])
+    x_validation_tfidf = vectorizer.transform(validation["text"])
+    x_test_tfidf = vectorizer.transform(test_df["text"])
+
+    x_train = sparse.hstack(
+        [x_train_tfidf, sparse.csr_matrix(embeddings[inner_train["_row_id"].values])],
+        format="csr",
+    )
+    x_validation = sparse.hstack(
+        [x_validation_tfidf, sparse.csr_matrix(embeddings[validation["_row_id"].values])],
+        format="csr",
+    )
+    x_test = sparse.hstack(
+        [x_test_tfidf, sparse.csr_matrix(embeddings[test_df["_row_id"].values])],
+        format="csr",
+    )
+
+    return fit_tuned_binary_classifiers(
+        x_train,
+        inner_train[labels],
+        x_validation,
+        validation[labels],
+        x_test,
+        labels,
+    )
+
+
 def evaluate_concreteness_tfidf(train_df: pd.DataFrame, test_df: pd.DataFrame) -> dict[str, float]:
     if train_df["weak_concrete"].nunique() < 2:
         clf = make_pipeline(TfidfVectorizer(stop_words="english"), DummyClassifier(strategy="most_frequent"))
@@ -410,6 +590,33 @@ def evaluate_concreteness_embeddings(
     return concreteness_metrics(test_df["weak_concrete"].values, pred, model_name)
 
 
+def evaluate_concreteness_hybrid(
+    train_df: pd.DataFrame,
+    test_df: pd.DataFrame,
+    train_embeddings: np.ndarray,
+    test_embeddings: np.ndarray,
+) -> dict[str, float]:
+    vectorizer = TfidfVectorizer(
+        stop_words="english",
+        ngram_range=(1, 2),
+        min_df=2,
+        max_df=0.90,
+        max_features=6000,
+    )
+    x_train_tfidf = vectorizer.fit_transform(train_df["text"])
+    x_test_tfidf = vectorizer.transform(test_df["text"])
+    x_train = sparse.hstack([x_train_tfidf, sparse.csr_matrix(train_embeddings)], format="csr")
+    x_test = sparse.hstack([x_test_tfidf, sparse.csr_matrix(test_embeddings)], format="csr")
+
+    if train_df["weak_concrete"].nunique() < 2:
+        clf = DummyClassifier(strategy="most_frequent")
+    else:
+        clf = LogisticRegression(max_iter=1000, class_weight="balanced", random_state=RANDOM_STATE)
+    clf.fit(x_train, train_df["weak_concrete"])
+    pred = clf.predict(x_test)
+    return concreteness_metrics(test_df["weak_concrete"].values, pred, "Hybrid TF-IDF + FinBERT")
+
+
 def concreteness_metrics(y_true: np.ndarray, y_pred: np.ndarray, model_name: str) -> dict[str, float]:
     precision, recall, f1, _ = precision_recall_fscore_support(
         y_true, y_pred, average="binary", zero_division=0
@@ -440,11 +647,11 @@ def set_plot_style() -> None:
 
 
 def plot_sdg_f1(scores: pd.DataFrame, output_path: Path) -> None:
-    plot_df = scores[scores["sdg"] != "MACRO_AVERAGE"].copy()
+    plot_df = scores[scores["sdg"].isin(SDG_LABELS)].copy()
     pivot = plot_df.pivot(index="sdg", columns="model", values="f1").reindex(SDG_LABELS)
 
     x = np.arange(len(pivot.index))
-    width = 0.36
+    width = min(0.24, 0.72 / max(len(pivot.columns), 1))
     fig, ax = plt.subplots(figsize=(12, 6.5))
     models = pivot.columns.tolist()
     for idx, model in enumerate(models):
@@ -487,7 +694,7 @@ def plot_concreteness_metrics(metrics: pd.DataFrame, output_path: Path) -> None:
     print(f"Saved {output_path}")
 
 
-def plot_coverage_concreteness(labels_df: pd.DataFrame, output_path: Path) -> None:
+def plot_coverage_concreteness(labels_df: pd.DataFrame, output_path: Path, csv_path: Path) -> None:
     rows = []
     for sdg in SDG_LABELS:
         subset = labels_df[labels_df[sdg] == 1]
@@ -526,7 +733,36 @@ def plot_coverage_concreteness(labels_df: pd.DataFrame, output_path: Path) -> No
     plt.close(fig)
     print(f"Saved {output_path}")
 
-    plot_df.to_csv(OUTPUTS_DIR / "coverage_concreteness_by_sdg.csv", index=False, encoding="utf-8-sig")
+    plot_df.to_csv(csv_path, index=False, encoding="utf-8-sig")
+    print(f"Saved {csv_path}")
+
+
+def save_model_summary(
+    sdg_scores: pd.DataFrame,
+    concreteness_metrics_df: pd.DataFrame,
+    output_path: Path,
+) -> None:
+    scored = sdg_scores[sdg_scores["sdg"].isin(SDG_LABELS)].copy()
+    aggregate = sdg_scores[sdg_scores["sdg"].isin(["MACRO_AVERAGE", "MICRO_AVERAGE", "WEIGHTED_AVERAGE"])].copy()
+    low_support_sdgs = {"SDG8_labor", "SDG9_innovation"}
+    rows = []
+    for model, group in scored.groupby("model"):
+        agg_for_model = aggregate[aggregate["model"] == model].set_index("sdg")["f1"]
+        rows.append(
+            {
+                "model": model,
+                "sdg_macro_f1_all_9": round(float(agg_for_model.get("MACRO_AVERAGE", group["f1"].mean())), 4),
+                "sdg_micro_f1": round(float(agg_for_model.get("MICRO_AVERAGE", np.nan)), 4),
+                "sdg_weighted_f1": round(float(agg_for_model.get("WEIGHTED_AVERAGE", np.nan)), 4),
+                "sdg_macro_f1_excluding_low_support_sdg8_sdg9": round(
+                    float(group.loc[~group["sdg"].isin(low_support_sdgs), "f1"].mean()), 4
+                ),
+            }
+        )
+
+    summary = pd.DataFrame(rows).merge(concreteness_metrics_df, on="model", how="left")
+    summary.to_csv(output_path, index=False, encoding="utf-8-sig")
+    print(f"Saved {output_path}")
 
 
 def main() -> None:
@@ -545,12 +781,14 @@ def main() -> None:
         raise ValueError("No SDG labels have enough positive and negative examples for evaluation.")
 
     train_df, test_df = split_data(labels_df, args.test_size)
+    output_suffix = "_multiyear" if args.multi_year else ""
     tfidf_pred, _ = fit_tfidf_sdg_classifier(train_df, test_df, valid_labels)
     tfidf_scores = evaluate_multilabel_predictions(
         test_df, tfidf_pred, "TF-IDF baseline", valid_labels
     )
 
-    cache_path = args.embedding_cache or (OUTPUTS_DIR / "finbert_embeddings.npy")
+    default_cache_name = "finbert_embeddings_multiyear.npy" if args.multi_year else "finbert_embeddings.npy"
+    cache_path = args.embedding_cache or (OUTPUTS_DIR / default_cache_name)
     embeddings = compute_transformer_embeddings(
         labels_df["text"].tolist(),
         model_name=args.finbert_model,
@@ -560,15 +798,32 @@ def main() -> None:
     )
     train_embeddings = embeddings[train_df["_row_id"].values]
     test_embeddings = embeddings[test_df["_row_id"].values]
-    finbert_pred = fit_embedding_sdg_classifier(
-        train_embeddings, test_embeddings, train_df, valid_labels
+    finbert_pred, finbert_thresholds = fit_tuned_embedding_sdg_classifier(
+        train_df, test_df, embeddings, valid_labels
     )
     finbert_scores = evaluate_multilabel_predictions(
-        test_df, finbert_pred, "FinBERT embedding classifier", valid_labels
+        test_df, finbert_pred, "FinBERT tuned classifier", valid_labels
+    )
+    hybrid_pred, hybrid_thresholds = fit_hybrid_sdg_classifier(
+        train_df, test_df, embeddings, valid_labels
+    )
+    hybrid_scores = evaluate_multilabel_predictions(
+        test_df, hybrid_pred, "Hybrid TF-IDF + FinBERT", valid_labels
     )
 
-    sdg_scores = pd.concat([tfidf_scores, finbert_scores], ignore_index=True)
-    sdg_scores_path = OUTPUTS_DIR / "finbert_vs_tfidf_sdg_f1_scores.csv"
+    threshold_df = pd.concat(
+        [
+            finbert_thresholds.assign(model="FinBERT tuned classifier"),
+            hybrid_thresholds.assign(model="Hybrid TF-IDF + FinBERT"),
+        ],
+        ignore_index=True,
+    )
+    threshold_path = OUTPUTS_DIR / f"sdg_tuned_thresholds{output_suffix}.csv"
+    threshold_df.to_csv(threshold_path, index=False, encoding="utf-8-sig")
+    print(f"Saved {threshold_path}")
+
+    sdg_scores = pd.concat([tfidf_scores, finbert_scores, hybrid_scores], ignore_index=True)
+    sdg_scores_path = OUTPUTS_DIR / f"finbert_vs_tfidf_sdg_f1_scores{output_suffix}.csv"
     sdg_scores.to_csv(sdg_scores_path, index=False, encoding="utf-8-sig")
     print(f"Saved {sdg_scores_path}")
 
@@ -579,13 +834,19 @@ def main() -> None:
             test_embeddings,
             train_df,
             test_df,
-            "FinBERT embedding classifier",
+            "FinBERT tuned classifier",
         ),
+        evaluate_concreteness_hybrid(train_df, test_df, train_embeddings, test_embeddings),
     ]
     concreteness_metrics_df = pd.DataFrame(concreteness_rows)
-    concreteness_path = OUTPUTS_DIR / "concreteness_detection_metrics.csv"
+    concreteness_path = OUTPUTS_DIR / f"concreteness_detection_metrics{output_suffix}.csv"
     concreteness_metrics_df.to_csv(concreteness_path, index=False, encoding="utf-8-sig")
     print(f"Saved {concreteness_path}")
+    save_model_summary(
+        sdg_scores,
+        concreteness_metrics_df,
+        OUTPUTS_DIR / f"bert_experiment_model_summary{output_suffix}.csv",
+    )
 
     split_manifest = {
         "label_source": "weak labels, not human gold labels",
@@ -595,16 +856,22 @@ def main() -> None:
         "random_state": RANDOM_STATE,
         "sdg_labels_evaluated": valid_labels,
         "finbert_model": args.finbert_model,
+        "multi_year": bool(args.multi_year),
+        "years": sorted(labels_df["year"].dropna().astype(str).unique().tolist()) if "year" in labels_df else ["2024"],
     }
-    (OUTPUTS_DIR / "weak_eval_manifest.json").write_text(
+    (OUTPUTS_DIR / f"weak_eval_manifest{output_suffix}.json").write_text(
         json.dumps(split_manifest, indent=2), encoding="utf-8"
     )
 
-    plot_sdg_f1(sdg_scores, PIC_DIR / "finbert_vs_tfidf_sdg_f1.png")
+    plot_sdg_f1(sdg_scores, PIC_DIR / f"finbert_vs_tfidf_sdg_f1{output_suffix}.png")
     plot_concreteness_metrics(
-        concreteness_metrics_df, PIC_DIR / "concreteness_detection_accuracy.png"
+        concreteness_metrics_df, PIC_DIR / f"concreteness_detection_accuracy{output_suffix}.png"
     )
-    plot_coverage_concreteness(labels_df, PIC_DIR / "coverage_vs_concreteness_gap.png")
+    plot_coverage_concreteness(
+        labels_df,
+        PIC_DIR / f"coverage_vs_concreteness_gap{output_suffix}.png",
+        OUTPUTS_DIR / f"coverage_concreteness_by_sdg{output_suffix}.csv",
+    )
 
     print("Weak-label FinBERT evaluation complete.")
 
