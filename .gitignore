@@ -30,6 +30,25 @@ data/processed/
 outputs/logs
 outputs/legacy
 
+# Generated experiment artifacts
+outputs/*.npy
+outputs/*embedding*.npz
+outputs/**/chunk_embeddings.npz
+outputs/bert_*.csv
+outputs/bert_*.json
+outputs/finbert_*.csv
+outputs/weak_eval_*.csv
+outputs/weak_eval_*.json
+outputs/concreteness_detection_metrics.csv
+outputs/coverage_concreteness_by_sdg.csv
+
+# Generated BERT / FinBERT figures
+# pic/bert_*.png
+# pic/finbert_*.png
+# pic/concreteness_detection_accuracy.png
+# pic/coverage_vs_concreteness_gap.png
+# pic/tfidf_vs_bert_sdg_similarity.png
+
 # Logs
 *.log
 
