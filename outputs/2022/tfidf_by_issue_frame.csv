@@ -1,0 +1,181 @@
+issue_frame,term,tfidf_score
+environment,carbon,0.3580220097807227
+environment,water,0.35580312135300357
+environment,waste,0.3216389212778883
+environment,emission,0.26010435078219574
+environment,reduction,0.2003218388058806
+environment,environmental,0.1496826924312636
+environment,consumption,0.1406515038424268
+environment,green,0.12759836076107717
+environment,risk,0.12391763881604609
+environment,metric,0.12269073150103572
+environment,facility,0.12269073150103572
+environment,chain,0.12023691687101501
+environment,save,0.11771321345737147
+environment,wastewater,0.111933743105642
+environment,gas,0.10674093640590109
+environment,recycling,0.10211499371041025
+environment,supply chain,0.09447186325579751
+environment,carbon emission,0.08444124479899308
+environment,recycle,0.08289662919533203
+environment,ghg,0.080981168878973
+environment,scope,0.07813972435690378
+environment,treatment,0.07671900209586915
+environment,carbon reduction,0.07658624528280768
+environment,net,0.07626489885970547
+environment,promote,0.0748413462156318
+environment,material,0.07116062427060073
+environment,pollution,0.07116062427060073
+environment,water consumption,0.07069499564566863
+environment,vendor,0.06961539079069609
+environment,pollutant,0.06873124576662228
+governance_risk,committee,0.39076576585964434
+governance_risk,risk,0.32368372056436356
+governance_risk,director,0.2631687810891482
+governance_risk,tax,0.2369931944591638
+governance_risk,policy,0.15550882518904213
+governance_risk,board,0.15495497261059957
+governance_risk,governance,0.1355717963186521
+governance_risk,board director,0.12098219590468481
+governance_risk,ethic,0.11962217322234009
+governance_risk,risk management,0.10674675890952413
+governance_risk,health,0.10330331507373305
+governance_risk,compliance,0.10330331507373305
+governance_risk,vice,0.09968514435195007
+governance_risk,harassment,0.09369498385594847
+governance_risk,reporting,0.09171033280379406
+governance_risk,audit,0.08952953973056864
+governance_risk,executive,0.08772292702971607
+governance_risk,president,0.08772292702971607
+governance_risk,materiality,0.07974811548156006
+governance_risk,chair,0.07716057494019286
+governance_risk,officer,0.07445058209519066
+governance_risk,senior,0.07177330393340405
+governance_risk,safety health,0.07177330393340405
+governance_risk,sexual harassment,0.07164910530160766
+governance_risk,sexual,0.07164910530160766
+governance_risk,tcfd,0.07164910530160766
+governance_risk,channel,0.06886887671582202
+governance_risk,vice president,0.06778589815932605
+governance_risk,chairman,0.06379849238524805
+governance_risk,female,0.06379849238524805
+innovation,patent,0.3080658089525234
+innovation,trade_secret,0.23674514922527254
+innovation,application,0.2011517928817892
+innovation,registration,0.17281740502214726
+innovation,collaboration,0.15573042029557874
+innovation,patent application,0.14540008659339854
+innovation,finfet,0.14540008659339854
+innovation,university,0.14275288527094718
+innovation,lead,0.1362641177586314
+innovation,research,0.11679781522168406
+innovation,trade,0.11398840518253862
+innovation,solution,0.11270700327531344
+innovation,academia,0.11270700327531344
+innovation,leadership,0.11030904770936827
+innovation,satisfaction,0.10522006632234335
+innovation,industry academia,0.09767940283860498
+innovation,trade_secret registration,0.09645172746214808
+innovation,industry lead,0.09645172746214808
+innovation,enable,0.09084274517242093
+innovation,chain,0.09084274517242093
+innovation,alliance,0.09084274517242093
+innovation,processor,0.0876833886019528
+innovation,course,0.08435397766010515
+innovation,partner,0.08435397766010515
+innovation,edge,0.0830857637676563
+innovation,gen,0.0830857637676563
+innovation,volume production,0.08265180240189653
+innovation,trust,0.08265180240189653
+innovation,volume,0.07786521014778937
+innovation,technology leadership,0.07513800218354229
+labor_talent,health,0.2485532611617955
+labor_talent,talent,0.21704650974692002
+labor_talent,training,0.21529613466831585
+labor_talent,risk,0.21354575958971164
+labor_talent,student,0.18203900817483615
+labor_talent,right,0.1580968269525326
+labor_talent,learn,0.15228263183856486
+labor_talent,school,0.1470315066027523
+labor_talent,occupational,0.1337742381906045
+labor_talent,human,0.13127813089531454
+labor_talent,university,0.12777738073810616
+labor_talent,learning,0.12607182817143542
+labor_talent,education,0.11552475518787679
+labor_talent,contractor,0.11027362995206422
+labor_talent,human right,0.1094516494286764
+labor_talent,female,0.1094516494286764
+labor_talent,construction,0.10742476703184907
+labor_talent,colleague,0.10085746253714832
+labor_talent,course,0.09977137948043906
+labor_talent,material,0.09802100440183484
+labor_talent,injury,0.09526347265088503
+labor_talent,worker,0.09525427017397342
+labor_talent,disease,0.09224670014882921
+labor_talent,site,0.09120970785723034
+labor_talent,hire,0.08684948162921106
+labor_talent,safety health,0.08310217826992097
+labor_talent,fire,0.07702153107943896
+labor_talent,job,0.07499464868261162
+labor_talent,promote,0.07351575330137615
+labor_talent,compensation,0.07296776628578427
+other,art,0.20870208036664567
+other,pollutant,0.20067621944606018
+other,chinese,0.18148006988403972
+other,gas,0.1723948124933926
+other,education,0.1567225568121751
+other,literature,0.15050716458454516
+other,cultural,0.1376575310584209
+other,acid,0.1376575310584209
+other,participant,0.1361100524130298
+other,classic,0.12542263715378763
+other,emission,0.12537804544974007
+other,air,0.12537804544974007
+other,youth,0.11647944935712541
+other,dividend,0.11647944935712541
+other,volatile organic,0.11288037343840884
+other,injury,0.10888804193042383
+other,sponsor,0.10589040850647764
+other,facility,0.10186966192791382
+other,hold,0.10186966192791382
+other,air pollutant,0.10033810972303009
+other,pollutant emission,0.10033810972303009
+other,volatile,0.09530136765582987
+other,organic,0.09530136765582987
+other,lecture,0.09403353408730507
+other,culture foundation,0.09074003494201986
+other,financial,0.09074003494201986
+other,reduction rate,0.08779584600765133
+other,organic gas,0.08779584600765133
+other,invest,0.0861974062466963
+other,student,0.0861974062466963
+supply_chain,material,0.38183977944789826
+supply_chain,risk,0.2923460811397971
+supply_chain,chain,0.2684810949243035
+supply_chain,supply chain,0.23864986215493642
+supply_chain,raw,0.21417083009971374
+supply_chain,raw material,0.18653588428039583
+supply_chain,audit,0.14915616384683528
+supply_chain,tcia,0.12899601388656068
+supply_chain,substance,0.12899601388656068
+supply_chain,critical,0.11335868452359481
+supply_chain,waste,0.10480926128283055
+supply_chain,material supplier,0.10480926128283055
+supply_chain,participate,0.09545994486197457
+supply_chain,environmental,0.08949369830810117
+supply_chain,hazardous,0.08868475954701048
+supply_chain,mineral,0.08868475954701048
+supply_chain,high risk,0.08868475954701048
+supply_chain,tier,0.08868475954701048
+supply_chain,supplier supplier,0.08062250867910044
+supply_chain,tier supplier,0.08062250867910044
+supply_chain,source,0.07756120520035434
+supply_chain,compliance,0.07756120520035434
+supply_chain,procurement,0.07599610100312423
+supply_chain,vendor,0.07599610100312423
+supply_chain,code,0.07599610100312423
+supply_chain,risk supplier,0.0725602578111904
+supply_chain,production line,0.0725602578111904
+supply_chain,quality reliability,0.07159495864648094
+supply_chain,supplier participate,0.06908736454829476
+supply_chain,site,0.06908736454829476

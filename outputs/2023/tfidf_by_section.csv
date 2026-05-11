@@ -1,0 +1,151 @@
+section_label,term,tfidf_score
+environment,carbon,0.3990561603137119
+environment,waste,0.34097756421171627
+environment,renewable,0.26279729079553377
+environment,renewable energy,0.23607214257903877
+environment,save,0.20608534100708126
+environment,recycling,0.17439212773552862
+environment,recycle,0.1502455254336862
+environment,energy save,0.14613324180502124
+environment,unit,0.134892223204635
+environment,ghg,0.12739821080437752
+environment,wastewater,0.12552470770431315
+environment,gwh,0.12341596732052795
+environment,air,0.11803069530405563
+environment,acid,0.11536709988658049
+environment,water resource,0.09926936501868552
+environment,chemical,0.0974221612033475
+environment,net,0.09554865810328313
+environment,carbon reduction,0.09353801875773235
+environment,ghg emission,0.08908382738831652
+environment,air pollution,0.08243413640283251
+environment,water consumption,0.08240254033419278
+environment,raw,0.08240254033419278
+environment,equivalent,0.08240254033419278
+environment,energy consumption,0.07349415759536113
+environment,vendor,0.06931961470238188
+environment,carbon emission,0.06931961470238188
+environment,factory,0.0674461116023175
+environment,layer,0.06681287054123738
+environment,raw material,0.062358679171821564
+environment,energy efficiency,0.062358679171821564
+governance,tax,0.4016974106124623
+governance,board,0.3761756793076956
+governance,director,0.3379205254797943
+governance,risk management,0.2869136537092593
+governance,board director,0.16674232138630507
+governance,nominate,0.12782795518241602
+governance,risk committee,0.12782795518241602
+governance,corporate governance,0.1211413204550206
+governance,chairman,0.1211413204550206
+governance,audit risk,0.1186973869551006
+governance,audit,0.11476546148370373
+governance,materiality,0.10201374354106998
+governance,executive,0.10201374354106998
+governance,vice,0.08926202559843623
+governance,association,0.08288616662711935
+governance,cybersecurity,0.07304454581852345
+governance,shareholder,0.07013444868448561
+governance,compliance,0.07013444868448561
+governance,info,0.06391397759120801
+governance,candidate,0.06063357141320185
+governance,president,0.057382730741851865
+governance,income,0.057382730741851865
+governance,vice president,0.057382730741851865
+governance,member,0.057382730741851865
+governance,compensation,0.057382730741851865
+governance,management framework,0.057382730741851865
+governance,regulation,0.057382730741851865
+governance,air,0.057382730741851865
+governance,research development,0.05478340936389258
+governance,nomination,0.05478340936389258
+social,student,0.3572965808891353
+social,school,0.27101842949116356
+social,volunteer,0.2548382247454225
+social,art,0.21843276406750498
+social,university,0.17393720101671692
+social,science,0.14972428151544717
+social,senior,0.14632145693555063
+social,rural,0.13753174033879942
+social,chinese,0.12539658677949359
+social,literature,0.12182563217013112
+social,donation,0.12182563217013112
+social,high school,0.12135153559305832
+social,culture foundation,0.11909886029637841
+social,care,0.11569603571648189
+social,education culture,0.10889038655668884
+social,cultural,0.10720655630971537
+social,charity,0.10548756197679232
+social,learn,0.10208473739689579
+social,director,0.10208473739689579
+social,unit,0.09868191281699927
+social,educational,0.09868191281699927
+social,lecture,0.09303617728801139
+social,vocational,0.0889911261015761
+social,welfare,0.0889911261015761
+social,alliance,0.08507061449741316
+social,teacher,0.08494607491514082
+social,exploration,0.08284142987568917
+social,institution,0.08166778991751662
+social,participant,0.0782649653376201
+social,job,0.07685597254227028
+supply_chain,raw,0.39855987026305756
+supply_chain,raw material,0.3321332252192146
+supply_chain,audit,0.21793273295667404
+supply_chain,mineral,0.15204444680289292
+supply_chain,compliance,0.13970046984402182
+supply_chain,material supplier,0.13285329008768584
+supply_chain,chemical,0.1285244322565001
+supply_chain,waste,0.1285244322565001
+supply_chain,consultation,0.12621062558330157
+supply_chain,fire,0.12621062558330157
+supply_chain,tcia,0.11956796107891726
+supply_chain,significant supplier,0.11956796107891726
+supply_chain,part,0.11956796107891726
+supply_chain,ethic,0.11734839466897834
+supply_chain,procurement,0.11734839466897834
+supply_chain,significant,0.11176037587521746
+supply_chain,substance,0.0929973030613801
+supply_chain,spare,0.08802573235956958
+supply_chain,spare part,0.08802573235956958
+supply_chain,hazardous,0.0863546385569958
+supply_chain,esh,0.0863546385569958
+supply_chain,regulatory,0.0838202819064131
+supply_chain,carbon,0.0838202819064131
+supply_chain,personnel,0.07823226311265222
+supply_chain,high risk,0.07823226311265222
+supply_chain,vendor,0.07823226311265222
+supply_chain,indirect,0.07306930954822721
+supply_chain,conflict,0.07306930954822721
+supply_chain,indirect raw,0.07306930954822721
+supply_chain,risk management,0.07264424431889135
+talent,talent,0.2630242870157928
+talent,injury,0.24192287537487392
+talent,university,0.20844383428602092
+talent,learn,0.20101043072751643
+talent,student,0.1817647511897755
+talent,workplace,0.16251907165203455
+talent,diversity,0.14699111415182214
+talent,occupational,0.14541180095182038
+talent,learning,0.12964189693398862
+talent,chemical,0.12616612141407946
+talent,female,0.12188930373902591
+talent,school,0.1093059131012061
+talent,compensation,0.1090588507138653
+talent,inclusion,0.10676391512210828
+talent,hour,0.09836680652623145
+talent,job,0.09659592320571701
+talent,esh,0.09405392522661919
+talent,protective,0.09186944634488882
+talent,career,0.08642793128932574
+talent,disease,0.08642793128932574
+talent,construction,0.08553635350107082
+talent,people,0.08553635350107082
+talent,professional,0.08339794466354404
+talent,trainer,0.08268250171039995
+talent,occupational safety,0.08268250171039995
+talent,incident,0.08134393533113012
+talent,engagement,0.08125953582601728
+talent,diversity inclusion,0.079620186832237
+talent,substance,0.07625993937293449
+talent,fire,0.07625993937293449

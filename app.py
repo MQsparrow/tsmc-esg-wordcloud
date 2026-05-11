@@ -8,8 +8,11 @@ import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 import matplotlib.pyplot as plt
-from wordcloud import WordCloud
 import plotly.express as px
+from sklearn.decomposition import PCA
+from sklearn.metrics.pairwise import cosine_similarity
+from wordcloud import WordCloud
+
 from app_pages.analysis import render_page as render_analysis_page
 from app_pages.methods import render_page as render_methods_page
 from app_pages.project_overview import render_page as render_project_overview_page
@@ -641,6 +644,7 @@ inject_motion_script()
 # =========================
 BASE_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR = BASE_DIR / "outputs"
+EMBEDDING_FILE_NAME = "chunk_embeddings.npz"
 
 CHUNKS_PATH = OUTPUT_DIR / "chunks_processed.csv"
 SECTION_TFIDF_PATH = OUTPUT_DIR / "tfidf_by_section.csv"
@@ -1257,6 +1261,123 @@ def filter_chunks_by_keyword(df: pd.DataFrame, keyword: str):
     return df[df["raw_text"].str.lower().str.contains(kw, na=False, regex=False)].copy()
 
 
+def get_available_embedding_years() -> list[str]:
+    if not OUTPUT_DIR.exists():
+        return []
+    years = []
+    for child in OUTPUT_DIR.iterdir():
+        if child.is_dir() and (child / EMBEDDING_FILE_NAME).exists() and (child / "chunks_processed.csv").exists():
+            years.append(child.name)
+    return sorted(years)
+
+
+def load_year_embeddings(year: str) -> tuple[np.ndarray, pd.DataFrame]:
+    year_dir = OUTPUT_DIR / year
+    emb_path = year_dir / EMBEDDING_FILE_NAME
+    chunk_path = year_dir / "chunks_processed.csv"
+    if not emb_path.exists() or not chunk_path.exists():
+        raise FileNotFoundError(f"Embedding or chunk file missing for year {year}")
+
+    data = np.load(emb_path)
+    embeddings = data["embeddings"]
+    df = pd.read_csv(chunk_path)
+    return embeddings, df
+
+
+def parse_primary_sdg(label_text: str) -> str:
+    if not label_text:
+        return "unclassified"
+    labels = [label.strip() for label in str(label_text).split(",") if label.strip() and label.strip() != "unclassified"]
+    return labels[0] if labels else "unclassified"
+
+
+def project_embeddings(embeddings: np.ndarray, n_components: int = 2) -> np.ndarray:
+    pca = PCA(n_components=n_components)
+    return pca.fit_transform(embeddings)
+
+
+def plot_embedding_scatter(embeddings_2d: np.ndarray, labels: list[str], title: str):
+    df_plot = pd.DataFrame({"x": embeddings_2d[:, 0], "y": embeddings_2d[:, 1], "label": labels})
+    fig = px.scatter(
+        df_plot,
+        x="x",
+        y="y",
+        color="label",
+        title=title,
+        hover_data={"label": True},
+        width=900,
+        height=560,
+    )
+    fig.update_layout(
+        margin=dict(l=20, r=20, t=55, b=20),
+        legend_title_text="Group",
+        plot_bgcolor="rgba(255,255,255,0.92)",
+        paper_bgcolor="rgba(255,255,255,0.0)",
+    )
+    st.plotly_chart(fig, use_container_width=True, config=PLOTLY_INTERACTIVE_CONFIG)
+
+
+def get_chunk_similarity(embeddings: np.ndarray, index: int, top_k: int = 5) -> list[tuple[int, float]]:
+    query = embeddings[index:index+1]
+    similarities = cosine_similarity(query, embeddings)[0]
+    ranking = sorted(
+        [(i, float(score)) for i, score in enumerate(similarities) if i != index],
+        key=lambda x: x[1],
+        reverse=True,
+    )
+    return ranking[:top_k]
+
+
+def render_embedding_inspector(year: str):
+    embeddings, df_year_chunks = load_year_embeddings(year)
+    df_year_chunks = df_year_chunks.fillna("")
+    df_year_chunks["primary_sdg"] = df_year_chunks["sdg_labels"].map(parse_primary_sdg)
+
+    st.markdown(f"### Semantic Embeddings — {year}")
+    st.caption("Visualize chunk-level semantic structure using normalized sentence embeddings from a lightweight BERT-style model.")
+
+    color_option = st.radio("Color points by", ["section_label", "primary_sdg"], horizontal=True)
+    labels = df_year_chunks[color_option].astype(str).tolist()
+    projected = project_embeddings(embeddings, n_components=2)
+    plot_embedding_scatter(projected, labels, f"Embedding projection by {color_option.replace('_', ' ').title()}")
+
+    st.markdown("---")
+    st.markdown("#### Nearest semantic neighbors")
+    chunk_index = st.number_input("Select chunk index", min_value=0, max_value=len(df_year_chunks) - 1, value=0, step=1)
+    neighbors = get_chunk_similarity(embeddings, chunk_index, top_k=5)
+    query_text = df_year_chunks.loc[chunk_index, "clean_text"]
+    st.markdown(f"**Query chunk #{chunk_index}:** {query_text[:240]}{'...' if len(query_text) > 240 else ''}")
+
+    for rank, (neighbor_idx, score) in enumerate(neighbors, start=1):
+        neighbor_text = df_year_chunks.loc[neighbor_idx, "clean_text"]
+        st.markdown(
+            f"**{rank}. Chunk #{neighbor_idx}** — similarity {score:.3f}\n\n{neighbor_text[:220]}{'...' if len(neighbor_text) > 220 else ''}",
+        )
+    
+    st.markdown("---")
+    st.markdown("#### Group centroid similarity")
+    group_col = "section_label" if color_option == "section_label" else "primary_sdg"
+    centroid_scores = []
+    group_labels = sorted(df_year_chunks[group_col].unique())
+    for group in group_labels:
+        group_indices = df_year_chunks[df_year_chunks[group_col] == group].index.tolist()
+        if not group_indices:
+            continue
+        centroid = embeddings[group_indices].mean(axis=0, keepdims=True)
+        centroid_scores.append((group, centroid))
+    if len(centroid_scores) > 1:
+        centroids = np.vstack([item[1] for item in centroid_scores])
+        sim_mat = cosine_similarity(centroids)
+        sim_df = pd.DataFrame(
+            sim_mat,
+            index=[item[0] for item in centroid_scores],
+            columns=[item[0] for item in centroid_scores],
+        )
+        plot_heatmap(sim_df, f"{color_option.replace('_', ' ').title()} centroid similarity")
+    else:
+        st.info("Not enough groups to compute centroid similarity.")
+
+
 # =========================
 # Sidebar
 # =========================
@@ -1737,6 +1858,21 @@ elif page_mode == "Analysis":
             "Representative chunks ranked by overlap with top SDG terms, then by SDG confidence.",
         )
         render_chunk_cards(filtered_chunks, df_sdg_tfidf, max_chunks=2)
+
+    available_embedding_years = get_available_embedding_years()
+    if available_embedding_years:
+        st.markdown("---")
+        st.markdown("### Semantic Embedding Explorer")
+        st.caption(
+            "View sentence embeddings from the BERT-style model, compare chunk-level structure, and inspect nearest semantic neighbors."
+        )
+        year_option = st.selectbox("Embedding year", available_embedding_years, index=len(available_embedding_years) - 1)
+        render_embedding_inspector(year_option)
+    else:
+        st.markdown("---")
+        st.info(
+            "No embedding files found in outputs/*/chunk_embeddings.npz. Run the pipeline first to generate embeddings."
+        )
 
 
 

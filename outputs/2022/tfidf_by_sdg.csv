@@ -1,0 +1,271 @@
+sdg_labels,term,tfidf_score
+SDG12_consumption,waste,0.44038046115467055
+SDG12_consumption,water,0.3276000991516452
+SDG12_consumption,metric,0.15154019882860084
+SDG12_consumption,carbon,0.1476885692896761
+SDG12_consumption,wastewater,0.14680964209295064
+SDG12_consumption,recycling,0.13946915998830312
+SDG12_consumption,vendor,0.13183054339497272
+SDG12_consumption,consumption,0.1288918422891719
+SDG12_consumption,recycle,0.12479781080002424
+SDG12_consumption,treatment,0.12111795472668427
+SDG12_consumption,wafer,0.11546560871738315
+SDG12_consumption,chemical,0.11291230500954574
+SDG12_consumption,substance,0.09887290754622954
+SDG12_consumption,increase,0.09398363500252116
+SDG12_consumption,hazardous,0.08898561679160659
+SDG12_consumption,raw,0.08055740143073244
+SDG12_consumption,gwh,0.07814992388752169
+SDG12_consumption,water consumption,0.07814992388752169
+SDG12_consumption,project,0.07787215471637468
+SDG12_consumption,raw material,0.071313034742871
+SDG12_consumption,packaging,0.071313034742871
+SDG12_consumption,source,0.06981641457330144
+SDG12_consumption,reuse,0.06973457999415156
+SDG12_consumption,procurement,0.06921103528236068
+SDG12_consumption,inch,0.06581046222107091
+SDG12_consumption,waste treatment,0.06581046222107091
+SDG12_consumption,assessment,0.06239890540001212
+SDG12_consumption,conduct,0.061760674430228195
+SDG12_consumption,activate,0.06051806007376719
+SDG12_consumption,camp,0.06051806007376719
+SDG13_climate,carbon,0.5031316686919252
+SDG13_climate,climate,0.23923417579959189
+SDG13_climate,renewable,0.16518019001444034
+SDG13_climate,water,0.16277789281209346
+SDG13_climate,ghg,0.1473732731311437
+SDG13_climate,renewable energy,0.14495404429838643
+SDG13_climate,carbon credit,0.13222400133311102
+SDG13_climate,credit,0.13146994715435048
+SDG13_climate,ghg emission,0.1247278985823325
+SDG13_climate,climate change,0.12135687429632352
+SDG13_climate,gwh,0.12089051550455866
+SDG13_climate,change,0.11838392204515887
+SDG13_climate,save,0.11805596912015488
+SDG13_climate,carbon reduction,0.10897474072629681
+SDG13_climate,scope,0.1085185952080623
+SDG13_climate,low carbon,0.1011307285802696
+SDG13_climate,metric,0.10097798344170959
+SDG13_climate,climate risk,0.09835212922278087
+SDG13_climate,net,0.0938393600698667
+SDG13_climate,biodiversity,0.09101765572224264
+SDG13_climate,energy save,0.08764663143623365
+SDG13_climate,increase,0.08385527811532086
+SDG13_climate,consumption,0.07645628298749843
+SDG13_climate,carbon emission,0.07567690328215058
+SDG13_climate,standard,0.07152361956895015
+SDG13_climate,tcfd,0.06841146980390128
+SDG13_climate,equivalent,0.0665956748882925
+SDG13_climate,gas,0.06659095615040186
+SDG13_climate,efficiency,0.06659095615040186
+SDG13_climate,opportunity,0.06549923250273054
+SDG17_partnership,design,0.20252989097002708
+SDG17_partnership,assurance,0.16452061868196782
+SDG17_partnership,issue,0.13877048084983337
+SDG17_partnership,materiality,0.13328433570302042
+SDG17_partnership,stakeholder,0.1312693737768694
+SDG17_partnership,standard,0.12376826670390545
+SDG17_partnership,gri,0.12353966575741065
+SDG17_partnership,association,0.11626715963094147
+SDG17_partnership,disclosure,0.11508195599464108
+SDG17_partnership,datum,0.1125166060944595
+SDG17_partnership,dnv,0.11217314910134168
+SDG17_partnership,reporting,0.10765273268320881
+SDG17_partnership,vice,0.10765273268320881
+SDG17_partnership,serve,0.10587539951506979
+SDG17_partnership,injury,0.10252641207924648
+SDG17_partnership,alliance,0.10127212127528415
+SDG17_partnership,change,0.10126494548501354
+SDG17_partnership,committee,0.09751439194853156
+SDG17_partnership,president,0.09740009147528417
+SDG17_partnership,climate,0.09376383841204958
+SDG17_partnership,disable,0.09102922740019731
+SDG17_partnership,performance,0.09001328487556759
+SDG17_partnership,financial,0.0871541650416264
+SDG17_partnership,governance,0.0871541650416264
+SDG17_partnership,organization,0.08626273133908562
+SDG17_partnership,director,0.08300396670631087
+SDG17_partnership,vice president,0.0820211296633972
+SDG17_partnership,industry association,0.08042927785308301
+SDG17_partnership,improvement,0.07876162426612164
+SDG17_partnership,review,0.07825573007635592
+SDG3_health,health,0.40671988752496097
+SDG3_health,occupational,0.24660735362792605
+SDG3_health,injury,0.22845685721222458
+SDG3_health,contractor,0.2256619546179356
+SDG3_health,disease,0.21249694045625167
+SDG3_health,safety health,0.1812133877992513
+SDG3_health,disable,0.17386113310056958
+SDG3_health,disable injury,0.1333079588635584
+SDG3_health,chemical,0.13255145257501025
+SDG3_health,construction,0.11405590105291581
+SDG3_health,incident,0.1024105171592924
+SDG3_health,alarm,0.09442647086168719
+SDG3_health,health check,0.09442647086168719
+SDG3_health,prevention,0.09231625416188274
+SDG3_health,level,0.08635833228269718
+SDG3_health,check,0.08534209763274367
+SDG3_health,worker,0.07995990002427862
+SDG3_health,senior,0.07800107431985552
+SDG3_health,response,0.07521532166557497
+SDG3_health,cause,0.07521532166557497
+SDG3_health,regulation,0.07242956901129442
+SDG3_health,frequency rate,0.07220847771776079
+SDG3_health,injury frequency,0.07220847771776079
+SDG3_health,severity rate,0.07220847771776079
+SDG3_health,occupational safety,0.07089961416802874
+SDG3_health,improvement,0.06964381635701386
+SDG3_health,personnel,0.06838241049028351
+SDG3_health,frequency,0.06827367810619493
+SDG3_health,emergency,0.06781702224767967
+SDG3_health,exposure,0.06761266287244372
+SDG4_education,student,0.29716775848936905
+SDG4_education,university,0.26306626466638744
+SDG4_education,school,0.25367104092830217
+SDG4_education,learn,0.17547048596515125
+SDG4_education,course,0.15345532105539267
+SDG4_education,learning,0.14699629231907388
+SDG4_education,high school,0.14241905610152358
+SDG4_education,vocational,0.12571906772717875
+SDG4_education,design,0.12452744165268799
+SDG4_education,patent,0.12213790859510845
+SDG4_education,national,0.11320676513880727
+SDG4_education,camp,0.10794251238521523
+SDG4_education,scholarship,0.10157508129139327
+SDG4_education,rural,0.09395223738085265
+SDG4_education,project,0.093395581239516
+SDG4_education,cultivate,0.08490507385410545
+SDG4_education,vocational high,0.08341012320675723
+SDG4_education,collaboration,0.08336725235211137
+SDG4_education,feedback,0.08236766506263435
+SDG4_education,skill,0.08142527239673895
+SDG4_education,academia,0.07924473559716508
+SDG4_education,chinese,0.07900284100441698
+SDG4_education,industry academia,0.07641998132276875
+SDG4_education,capability,0.0764145664686949
+SDG4_education,instructor,0.07335978093267291
+SDG4_education,science,0.07075422821175453
+SDG4_education,knowledge,0.06947271029342614
+SDG4_education,scientific,0.06869068969968241
+SDG4_education,trainee,0.06771672086092885
+SDG4_education,teacher,0.06576149919537516
+SDG6_water,water,0.7748762687782457
+SDG6_water,water consumption,0.1605501852199895
+SDG6_water,reclaim,0.14908231484713313
+SDG6_water,wastewater,0.14326181239041322
+SDG6_water,consumption,0.1347610902223036
+SDG6_water,waste,0.11230090851858633
+SDG6_water,reclaim water,0.10321083335570755
+SDG6_water,recycling,0.0972133726934947
+SDG6_water,plant,0.08609736319758285
+SDG6_water,treatment,0.07674739949486423
+SDG6_water,reclamation,0.07138585280231921
+SDG6_water,water plant,0.07138585280231921
+SDG6_water,recycle,0.062133634282879005
+SDG6_water,increase,0.059893817876579374
+SDG6_water,wafer,0.059893817876579374
+SDG6_water,park,0.05840660683826118
+SDG6_water,water recycling,0.05840660683826118
+SDG6_water,layer,0.05628142629623376
+SDG6_water,pollution,0.056150454259293166
+SDG6_water,water quality,0.05224711797312957
+SDG6_water,ecological,0.05224711797312957
+SDG6_water,unit water,0.051916983856232155
+SDG6_water,water reclamation,0.051916983856232155
+SDG6_water,mask layer,0.051605416677853774
+SDG6_water,wafer mask,0.051605416677853774
+SDG6_water,inch,0.051605416677853774
+SDG6_water,discharge,0.04866372702472074
+SDG6_water,mask,0.045944536227637084
+SDG6_water,vendor,0.045944536227637084
+SDG6_water,water pollution,0.04587148149142558
+SDG7_energy,renewable,0.3859065904238592
+SDG7_energy,renewable energy,0.34950030830840084
+SDG7_energy,save,0.18307364121836037
+SDG7_energy,gwh,0.17951856850637177
+SDG7_energy,electricity,0.16999695255990602
+SDG7_energy,energy efficiency,0.16018764130801702
+SDG7_energy,efficiency,0.14383338298756998
+SDG7_energy,carbon,0.13317905832182406
+SDG7_energy,consumption,0.11719757132320516
+SDG7_energy,solar,0.11082420615972485
+SDG7_energy,energy save,0.10921884634637524
+SDG7_energy,increase,0.10654324665745925
+SDG7_energy,energy consumption,0.10607915411740151
+SDG7_energy,ghg,0.08842206902577528
+SDG7_energy,school,0.08252726442405693
+SDG7_energy,lab,0.08159934932107808
+SDG7_energy,underprivileged,0.08009382065400851
+SDG7_energy,purchase,0.07846013195072586
+SDG7_energy,ghg emission,0.07281256423091684
+SDG7_energy,light,0.07192178762149871
+SDG7_energy,tool,0.07073765522062023
+SDG7_energy,green energy,0.06553130780782515
+SDG7_energy,increase energy,0.06553130780782515
+SDG7_energy,food,0.06538344329227155
+SDG7_energy,equivalent,0.06538344329227155
+SDG7_energy,metric,0.06484285061890188
+SDG7_energy,startup,0.06464745359317282
+SDG7_energy,energy renewable,0.0637308140081024
+SDG7_energy,zone,0.0637308140081024
+SDG7_energy,food project,0.0637308140081024
+SDG8_labor,right,0.374936380780294
+SDG8_labor,human right,0.24564797361467539
+SDG8_labor,harassment,0.220535907521364
+SDG8_labor,vocational,0.1613535379639466
+SDG8_labor,leave,0.1187021367005752
+SDG8_labor,meeting,0.11635956644905675
+SDG8_labor,discrimination,0.11551880870166686
+SDG8_labor,conduct,0.11060557733761914
+SDG8_labor,issue,0.11060557733761914
+SDG8_labor,labor,0.10989514609077583
+SDG8_labor,vocational high,0.10957120310822326
+SDG8_labor,channel,0.10078506092566994
+SDG8_labor,employment,0.09907866277195412
+SDG8_labor,worker,0.0935861280024078
+SDG8_labor,officer,0.09130933592351938
+SDG8_labor,health,0.08953784832092977
+SDG8_labor,school,0.0874223495046654
+SDG8_labor,return,0.0840374646576521
+SDG8_labor,compensation,0.0840374646576521
+SDG8_labor,high school,0.0840374646576521
+SDG8_labor,procedure,0.08159419287102106
+SDG8_labor,policy,0.0790039838125851
+SDG8_labor,offer,0.07373705155841274
+SDG8_labor,labor management,0.07351196917378801
+SDG8_labor,irregular,0.07351196917378801
+SDG8_labor,sc,0.07351196917378801
+SDG8_labor,recruitment,0.0730474687388155
+SDG8_labor,investigation,0.07260909208377597
+SDG8_labor,violation,0.07198932923262139
+SDG8_labor,opportunity,0.06993787960373232
+SDG9_innovation,trade_secret,0.43875327075820214
+SDG9_innovation,registration,0.3875726978063947
+SDG9_innovation,patent,0.28603616888904365
+SDG9_innovation,trade,0.22472728502249378
+SDG9_innovation,trade_secret registration,0.22287841595651584
+SDG9_innovation,register,0.12111646806449836
+SDG9_innovation,collaboration,0.11147075818134612
+SDG9_innovation,award,0.10479414164636822
+SDG9_innovation,project,0.09082158942685245
+SDG9_innovation,protection,0.09082158942685245
+SDG9_innovation,industry academia,0.08574673706257395
+SDG9_innovation,patent application,0.08357940598369344
+SDG9_innovation,green trade_secret,0.08357940598369344
+SDG9_innovation,academia,0.07684903720733668
+SDG9_innovation,technology leadership,0.07490909500749793
+SDG9_innovation,graduate,0.0696495049864112
+SDG9_innovation,graduate student,0.0696495049864112
+SDG9_innovation,student university,0.0696495049864112
+SDG9_innovation,registration system,0.0696495049864112
+SDG9_innovation,patent management,0.0696495049864112
+SDG9_innovation,undergraduate,0.0696495049864112
+SDG9_innovation,university,0.06957636540544304
+SDG9_innovation,contribution,0.06859738965005915
+SDG9_innovation,advantage,0.066842730206727
+SDG9_innovation,student,0.06287648498782093
+SDG9_innovation,culture,0.06287648498782093
+SDG9_innovation,invest,0.061845658138171604
+SDG9_innovation,competitive,0.061845658138171604
+SDG9_innovation,sdg,0.06055823403224918
+SDG9_innovation,invention,0.06055823403224918

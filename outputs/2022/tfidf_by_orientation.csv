@@ -1,0 +1,91 @@
+orientation,term,tfidf_score
+action_oriented,target,0.4281111131893163
+action_oriented,improve,0.21156653849472026
+action_oriented,renewable,0.18169832129546562
+action_oriented,save,0.18169832129546562
+action_oriented,protection,0.1692532307957762
+action_oriented,renewable energy,0.15680814029608675
+action_oriented,raw,0.13191795929670794
+action_oriented,wastewater,0.12942894119677004
+action_oriented,acid,0.12693992309683216
+action_oriented,optimize,0.12445090499689426
+action_oriented,raw material,0.10951679639726696
+action_oriented,net,0.10951679639726696
+action_oriented,complete,0.10951679639726696
+action_oriented,monitoring,0.10702777829732907
+action_oriented,risk management,0.10702777829732907
+action_oriented,air pollution,0.10702777829732907
+action_oriented,energy save,0.10453876019739118
+action_oriented,ghg emission,0.09458268779763965
+action_oriented,carbon reduction,0.09458268779763965
+action_oriented,substance,0.08960465159776386
+action_oriented,energy efficiency,0.08960465159776386
+action_oriented,human,0.08711563349782599
+action_oriented,volume production,0.08711563349782599
+action_oriented,apply,0.0846266153978881
+action_oriented,policy,0.0846266153978881
+action_oriented,low carbon,0.0846266153978881
+action_oriented,operational,0.08213759729795021
+action_oriented,yield,0.08213759729795021
+action_oriented,cost,0.07964857919801233
+action_oriented,mechanism,0.07964857919801233
+mixed,ming,0.21626010105626617
+mixed,parent,0.18021675088022182
+mixed,yang,0.18021675088022182
+mixed,chiao tung,0.16219507579219963
+mixed,tung,0.16219507579219963
+mixed,dnv,0.16219507579219963
+mixed,smart,0.16219507579219963
+mixed,yang ming,0.16219507579219963
+mixed,chiao,0.16219507579219963
+mixed,metric metric,0.14417340070417745
+mixed,ming chiao,0.14417340070417745
+mixed,renewable energy,0.14417340070417745
+mixed,renewable,0.14417340070417745
+mixed,national yang,0.12615172561615529
+mixed,startup,0.12615172561615529
+mixed,general waste,0.12615172561615529
+mixed,shuttle,0.10813005052813308
+mixed,oip,0.10813005052813308
+mixed,shuttle program,0.10813005052813308
+mixed,wastewater,0.10813005052813308
+mixed,retail,0.10813005052813308
+mixed,cutting,0.10813005052813308
+mixed,academia joint,0.09010837544011091
+mixed,cutting edge,0.09010837544011091
+mixed,tcfd,0.09010837544011091
+mixed,parent child,0.09010837544011091
+mixed,design technology,0.07208670035208872
+mixed,university shuttle,0.07208670035208872
+mixed,university university,0.07208670035208872
+mixed,unit metric,0.07208670035208872
+people_centric,protection,0.22328966643401532
+people_centric,right,0.22053300388544722
+people_centric,human,0.21777634133687912
+people_centric,occupational,0.20399302859403867
+people_centric,workplace,0.1929663783997663
+people_centric,safety health,0.17642640310835778
+people_centric,fire,0.15712976526838113
+people_centric,human right,0.15161644017124495
+people_centric,compensation,0.1350764648798364
+people_centric,critical,0.11853648958842787
+people_centric,disease,0.11853648958842787
+people_centric,art,0.11853648958842787
+people_centric,survey,0.11577982703985978
+people_centric,complete,0.11577982703985978
+people_centric,policy,0.1130231644912917
+people_centric,ethic,0.1130231644912917
+people_centric,target,0.11026650194272361
+people_centric,construction,0.10750983939415552
+people_centric,improve,0.10475317684558742
+people_centric,accord,0.09648318919988315
+people_centric,core,0.09372652665131506
+people_centric,procedure,0.09096986410274698
+people_centric,self,0.09096986410274698
+people_centric,emergency,0.08821320155417889
+people_centric,esh,0.08821320155417889
+people_centric,fire protection,0.08821320155417889
+people_centric,hold,0.08821320155417889
+people_centric,hire,0.0854565390056108
+people_centric,worker,0.08269987645704271
+people_centric,invite,0.07994321390847461

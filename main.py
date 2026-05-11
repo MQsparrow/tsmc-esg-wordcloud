@@ -8,11 +8,10 @@ from pathlib import Path
 from datetime import datetime
 
 from src.phase1_audit import print_report
-from src.pipeline import load_spacy_model, run_pipeline, save_outputs
+from src.pipeline import process_all_years
 
-TEXT_PATH = Path("data/raw/tsmc_report.txt")
-OUTPUT_DIR = Path("outputs")
-LOG_DIR = OUTPUT_DIR / "logs"
+OUTPUT_BASE_DIR = Path("outputs")
+LOG_DIR = OUTPUT_BASE_DIR / "logs"
 
 
 class TeeStream(io.TextIOBase):
@@ -41,60 +40,66 @@ def print_top_terms(df, group_col: str, label: str) -> None:
 
 
 def main(run_audit: bool = False):
-    if not TEXT_PATH.exists():
-        raise FileNotFoundError(f"Input text file not found: {TEXT_PATH}")
-
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    """
+    Main entry point: Process all available TSMC reports (2022, 2023, 2024).
+    """
+    OUTPUT_BASE_DIR.mkdir(parents=True, exist_ok=True)
     LOG_DIR.mkdir(parents=True, exist_ok=True)
-
-    raw_text = TEXT_PATH.read_text(encoding="utf-8")
-
-    nlp = load_spacy_model("en_core_web_sm")
-
-    df_chunks = run_pipeline(raw_text, nlp)
-    outputs = save_outputs(df_chunks, output_dir=str(OUTPUT_DIR))
+    
+    # Run pipeline for all years
+    all_results = process_all_years(output_base_dir=str(OUTPUT_BASE_DIR))
+    
+    # Log results for each year
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     run_log_path = LOG_DIR / f"main_{timestamp}.log"
     latest_log_path = LOG_DIR / "main_latest.log"
-
+    
     with run_log_path.open("w", encoding="utf-8") as log_file:
         tee = TeeStream(sys.stdout, log_file)
         with contextlib.redirect_stdout(tee):
             print(f"Run timestamp: {datetime.now().isoformat(timespec='seconds')}")
-            print(f"Input text file: {TEXT_PATH}")
-            print(f"Output directory: {OUTPUT_DIR}")
-            print(f"Log file: {run_log_path}")
-            print(df_chunks.head())
-            print(outputs["section_terms"].head(20))
-            print(outputs["orientation_terms"].head(20))
-
-            print("\n=== Chunk count ===")
-            print(len(df_chunks))
-
-            print("\n=== Section label distribution ===")
-            print(df_chunks["section_label"].value_counts())
-
-            print("\n=== Orientation distribution ===")
-            print(df_chunks["orientation"].value_counts())
-
-            print("\n=== SDG distribution (multi-label, exploded) ===")
-            print(df_chunks["sdg_labels"].str.split(",").explode().str.strip().value_counts())
-
-            print("\n=== Empty-ish clean text count (<5 words) ===")
-            print((df_chunks["clean_text"].str.split().str.len() < 5).sum())
-
-            print_top_terms(outputs["section_terms"], "section_label", "section")
-            print_top_terms(outputs["orientation_terms"], "orientation", "orientation")
-            print_top_terms(outputs["sdg_terms"], "sdg_labels", "SDG")
-            print_top_terms(outputs["issue_frame_terms"], "issue_frame", "issue frame")
-
-            if run_audit:
-                print("\n=== Phase 1 Audit ===")
-                print_report(df_chunks)
-
+            print(f"Output base directory: {OUTPUT_BASE_DIR}")
+            print(f"Log file: {run_log_path}\n")
+            
+            # Log details for each year
+            for year in sorted(all_results.keys()):
+                result = all_results[year]
+                df_chunks = result["chunks"]
+                outputs = result["outputs"]
+                
+                print(f"\n{'='*60}")
+                print(f"Year {year} Report")
+                print(f"{'='*60}")
+                print(f"Input: {result['text_path']}")
+                print(f"Output: {result['output_dir']}")
+                print(f"\nFirst 5 chunks:")
+                print(df_chunks.head())
+                print(f"\nTop section terms (first 20):")
+                print(outputs["section_terms"].head(20))
+                
+                print(f"\n=== Chunk count ===")
+                print(len(df_chunks))
+                
+                print(f"\n=== Section label distribution ===")
+                print(df_chunks["section_label"].value_counts())
+                
+                print(f"\n=== Orientation distribution ===")
+                print(df_chunks["orientation"].value_counts())
+                
+                print(f"\n=== SDG distribution (multi-label, exploded) ===")
+                print(df_chunks["sdg_labels"].str.split(",").explode().str.strip().value_counts())
+                
+                print(f"\n=== Empty-ish clean text count (<5 words) ===")
+                print((df_chunks["clean_text"].str.split().str.len() < 5).sum())
+                
+                if run_audit:
+                    print(f"\n=== Phase 1 Audit for {year} ===")
+                    print_report(df_chunks)
+    
     latest_log_path.write_text(run_log_path.read_text(encoding="utf-8"), encoding="utf-8")
     print(f"\nSaved run log to {run_log_path}")
-    print(f"Updated latest log at {latest_log_path}")
+
+
 
 
 def parse_args():

@@ -13,3 +13,5 @@ requests
 nltk
 streamlit-echarts
 gensim
+sentence-transformers
+numpy
