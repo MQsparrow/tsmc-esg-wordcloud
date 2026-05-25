@@ -18,6 +18,7 @@ from app_pages.methods import render_page as render_methods_page
 from app_pages.project_overview import render_page as render_project_overview_page
 from app_pages.week9_q1 import render_page as render_week9_q1_page
 from app_pages.week10_q2 import render_page as render_week10_q2_page
+from app_pages.week13_agent import render_page as render_week13_agent_page
 
 try:
     from streamlit_echarts import st_echarts
@@ -1385,7 +1386,7 @@ st.sidebar.header("Controls")
 
 page_mode = st.sidebar.selectbox(
     "Page",
-    ["Project Overview", "Analysis", "Methods", "Kiwi's Week9 Q1", "Kiwi's Week10 Q2"]
+    ["Project Overview", "Analysis", "Methods", "Kiwi's Week9 Q1", "Kiwi's Week10 Q2", "Week 13 Agent"]
 )
 
 theme_mode = None
@@ -1436,6 +1437,13 @@ elif page_mode == "Kiwi's Week10 Q2":
         render_card_grid=render_card_grid,
         section_label_map=SECTION_LABEL_MAP,
         sdg_label_map=SDG_LABEL_MAP,
+        st=st,
+    )
+elif page_mode == "Week 13 Agent":
+    render_week13_agent_page(
+        render_page_header=render_page_header,
+        render_metric_grid=render_metric_grid,
+        render_card_grid=render_card_grid,
         st=st,
     )
 elif False and page_mode == "Methods":
