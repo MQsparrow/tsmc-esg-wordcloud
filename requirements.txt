@@ -15,3 +15,7 @@ streamlit-echarts
 gensim
 sentence-transformers
 numpy
+langgraph
+langchain-openai
+openai
+python-dotenv

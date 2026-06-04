@@ -16,6 +16,7 @@ from wordcloud import WordCloud
 from app_pages.analysis import render_page as render_analysis_page
 from app_pages.methods import render_page as render_methods_page
 from app_pages.project_overview import render_page as render_project_overview_page
+from app_pages.final_project_agents import render_page as render_final_project_agents_page
 from app_pages.week9_q1 import render_page as render_week9_q1_page
 from app_pages.week10_q2 import render_page as render_week10_q2_page
 from app_pages.week13_agent import render_page as render_week13_agent_page
@@ -1386,7 +1387,7 @@ st.sidebar.header("Controls")
 
 page_mode = st.sidebar.selectbox(
     "Page",
-    ["Project Overview", "Analysis", "Methods", "Kiwi's Week9 Q1", "Kiwi's Week10 Q2", "Week 13 Agent"]
+    ["Project Overview", "Final Project Agents", "Analysis", "Methods", "Kiwi's Week9 Q1", "Kiwi's Week10 Q2", "Week 13 Agent"]
 )
 
 theme_mode = None
@@ -1417,6 +1418,13 @@ if page_mode == "Project Overview":
         render_card_grid=render_card_grid,
         aggregate_terms_for_overview=aggregate_terms_for_overview,
         render_interactive_wordcloud=render_interactive_wordcloud,
+        st=st,
+    )
+elif page_mode == "Final Project Agents":
+    render_final_project_agents_page(
+        render_page_header=render_page_header,
+        render_metric_grid=render_metric_grid,
+        render_card_grid=render_card_grid,
         st=st,
     )
 elif page_mode == "Kiwi's Week9 Q1":
