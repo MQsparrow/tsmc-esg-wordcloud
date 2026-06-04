@@ -20,6 +20,14 @@ SAMPLE_QUESTIONS = [
 ]
 
 
+def _get_configured_api_key(st: Any) -> str:
+    try:
+        secret_key = st.secrets.get("OPENAI_API_KEY", "")
+    except Exception:
+        secret_key = ""
+    return str(secret_key or "")
+
+
 def _extract_uploaded_text(uploaded_file: Any) -> tuple[str, str]:
     if uploaded_file is None:
         return "", ""
@@ -198,6 +206,18 @@ def render_page(render_page_header, render_metric_grid, render_card_grid, st) ->
             ["executive", "investor-style", "classroom presentation", "short demo script"],
             key="fp_summary_mode",
         )
+        model = st.selectbox(
+            "OpenAI model",
+            ["gpt-4.1-mini", "gpt-4o-mini", "gpt-4.1"],
+            index=0,
+            key="fp_model",
+        )
+        session_api_key = st.text_input(
+            "OpenAI API key",
+            type="password",
+            help="Optional for local testing. On Streamlit Cloud, use app secrets instead.",
+            key="fp_api_key",
+        )
         uploaded_file = st.file_uploader("Optional report upload", type=["txt", "md", "csv", "pdf"], key="fp_upload")
         run_clicked = st.button("Run LangGraph analysis", type="primary", key="fp_run")
 
@@ -207,6 +227,7 @@ def render_page(render_page_header, render_metric_grid, render_card_grid, st) ->
         raw_text = ""
 
     if run_clicked or "fp_agent_state" not in st.session_state:
+        api_key = session_api_key.strip() or _get_configured_api_key(st)
         with st.spinner("Running ESG agents..."):
             st.session_state.fp_agent_state = run_analysis(
                 raw_text=raw_text,
@@ -214,6 +235,8 @@ def render_page(render_page_header, render_metric_grid, render_card_grid, st) ->
                 top_n=top_n,
                 summary_mode=summary_mode,
                 source=source_name,
+                api_key=api_key,
+                model=model,
             )
     state = st.session_state.fp_agent_state
 
@@ -250,7 +273,7 @@ def render_page(render_page_header, render_metric_grid, render_card_grid, st) ->
         st.markdown('<div class="fp-panel"><h3>ESG distribution</h3>', unsafe_allow_html=True)
         if not esg_df.empty:
             color_map = chart_data.get("esg_colors", {})
-            fig = px.donut(
+            fig = px.pie(
                 esg_df,
                 names="category",
                 values="chunks",

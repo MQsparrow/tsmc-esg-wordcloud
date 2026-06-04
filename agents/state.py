@@ -19,4 +19,6 @@ class ESGState(TypedDict, total=False):
     source: str
     year: str
     mode: str
+    api_key: str
+    model: str
     errors: list[str]

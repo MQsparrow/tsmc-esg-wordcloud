@@ -68,3 +68,5 @@ PLAN.md
 # other
 kiwi/
 # mds/
+
+.env.example

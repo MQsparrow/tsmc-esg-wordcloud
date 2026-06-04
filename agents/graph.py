@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import Any, Callable
 
 from .classify import classification_agent
@@ -18,7 +19,12 @@ def summary_agent(state: ESGState) -> ESGState:
 
 
 def qa_agent(state: ESGState) -> ESGState:
-    answer = answer_with_optional_llm(state.get("user_question", ""), state.get("retrieved_chunks", []))
+    answer = answer_with_optional_llm(
+        state.get("user_question", ""),
+        state.get("retrieved_chunks", []),
+        model=str(state.get("model", "gpt-4.1-mini")),
+        api_key=state.get("api_key", ""),
+    )
     return {"qa_answer": answer}
 
 
@@ -73,12 +79,16 @@ def run_analysis(
     top_n: int = 40,
     summary_mode: str = "executive",
     source: str = "",
+    api_key: str = "",
+    model: str = "",
 ) -> ESGState:
     initial_state: ESGState = {
         "raw_text": raw_text,
         "year": str(year),
         "source": source,
         "mode": summary_mode,
+        "api_key": api_key,
+        "model": model or os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
         "chart_data": {"top_n": top_n},
         "errors": [],
     }
