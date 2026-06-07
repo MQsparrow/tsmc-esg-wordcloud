@@ -684,9 +684,9 @@ def render_page(render_page_header, render_metric_grid, render_card_grid, st) ->
     state["api_key"] = api_key
     state["model"] = model
     if api_key:
-        st.sidebar.caption("OpenAI key detected — LLM answers/summaries active (requires the `openai` package).")
+        st.sidebar.caption("OpenAI key detected. LLM summaries and answers are enabled.")
     else:
-        st.sidebar.caption("No OpenAI key — running deterministic fallback mode.")
+        st.sidebar.caption("No OpenAI key detected. Running deterministic fallback mode.")
 
     errors = state.get("errors", [])
     if errors:
