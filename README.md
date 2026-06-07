@@ -1,36 +1,166 @@
 # TSMC ESG Text Mining Dashboard
 
-An interactive Streamlit dashboard for analyzing how TSMC communicates ESG topics across its 2022, 2023, and 2024 sustainability reports.
+An interactive text-mining and agent dashboard for exploring how TSMC communicates ESG topics across its 2022, 2023, and 2024 sustainability reports.
 
-The project combines a rule-based text-mining pipeline, cross-year comparison tools, semantic embeddings, and a LangGraph-style agent workflow for report summarization and source-grounded Q&A.
+The project turns long ESG reports into searchable, visual, and explainable evidence. It combines a traditional NLP pipeline with a LangGraph-style multi-agent workflow, so users can inspect keywords, ESG categories, semantic shifts, cross-year changes, and source-grounded Q&A from one Streamlit app.
 
-## Highlights
+## What This Project Does
 
-- Multi-year ESG report analysis for 2022, 2023, and 2024.
-- Strategic Framing and UN SDG classification for report chunks.
-- TF-IDF keyword analysis, similarity heatmaps, word clouds, and representative evidence chunks.
-- MiniLM sentence embeddings for semantic exploration.
-- Cross-Year Compare page for topic coverage, keyword shifts, and semantic centroid movement.
-- Final Project Agents page with live agent execution narration, optional OpenAI-powered summaries, and single-year or cross-year Q&A.
-- Coursework Archive pages preserved for earlier assignments and supporting analysis.
+This project answers one core question:
 
-## App Pages
+> How does TSMC's sustainability language change across topics and across years?
 
-The sidebar is organized into two sections.
+To answer that, the system:
 
-### Final Demo
+1. Loads processed ESG report chunks for 2022, 2023, and 2024.
+2. Cleans and chunks report text into analyzable units.
+3. Labels each chunk by ESG category and UN SDG theme.
+4. Extracts representative keywords using TF-IDF.
+5. Computes similarity and semantic embedding views.
+6. Builds cross-year metrics for topic coverage, keyword shifts, and semantic movement.
+7. Uses an agent workflow to summarize findings and answer questions with cited evidence.
 
-- **Final Project Agents**: LangGraph-style ESG analysis workflow with live agent narration, AI summary, source-grounded Q&A, word cloud, ESG distribution, and evidence details.
-- **Cross-Year Compare**: Three-year comparison of SDG topics using coverage changes, keyword turnover, semantic shift, and grounded narrative summaries.
+The app is designed around the final project demo. The main story is a multi-agent ESG analysis workflow plus a cross-year comparison module that explains how topic emphasis changes over time.
 
-### Coursework Archive
+## Key Features
 
-- **Project Overview**: Project pitch and high-level framing.
-- **Methods**: Pipeline walkthrough.
-- **Analysis**: Strategic Framing / UN SDG analysis, validation heatmaps, and embedding explorer.
-- **Kiwi's Week9 Q1**: Phrase mining, co-occurrence networks, TF-IDF clustering, and context exploration.
-- **Kiwi's Week10 Q2**: Word2Vec exploration and semantic group comparison.
-- **Week 13 Agent**: Earlier agent workflow prototype.
+- **Multi-year analysis**: compares 2022, 2023, and 2024 TSMC sustainability reports.
+- **ESG classification**: assigns chunks to Environmental, Social, Governance, or Other.
+- **UN SDG mapping**: maps report language to 9 SDG-related themes.
+- **TF-IDF keyword mining**: surfaces the most distinctive terms by section and SDG.
+- **Semantic embeddings**: uses MiniLM sentence embeddings to compare chunk meaning.
+- **Cross-year comparison**: tracks topic coverage, persistent/new/dropped keywords, and semantic centroid shift.
+- **LangGraph-style agent workflow**: runs named agents for preprocessing, keywords, ESG classification, visualization, summary, retrieval, and Q&A.
+- **OpenAI optional**: uses OpenAI for polished summaries and answers when a key is available; otherwise falls back to deterministic evidence output.
+- **Live agent narration**: shows the agent workflow running step by step during the demo.
+- **Demo-first layout**: keeps the final workflow, cross-year comparison, source evidence, and AI/fallback behavior easy to present.
+
+## How It Works
+
+The project has two connected layers.
+
+### 1. Text-Mining Pipeline
+
+The pipeline prepares the report data:
+
+- PDF/text extraction and cleanup.
+- Paragraph-level chunking.
+- Rule-based ESG and SDG labeling.
+- TF-IDF keyword extraction.
+- Cosine similarity matrices.
+- MiniLM sentence embeddings.
+- Per-year output files under `outputs/{year}/`.
+
+This layer is deterministic and reproducible. It gives the dashboard stable data even when no API key is available.
+
+### 2. Agent Layer
+
+The agent layer sits on top of the processed data:
+
+- **Preprocess Agent** loads the selected year and prepares chunks.
+- **Keyword Agent** ranks important terms.
+- **ESG Classifier** summarizes category counts.
+- **Visualization Agent** prepares chart payloads.
+- **Summary Agent** writes a narrative using OpenAI or fallback logic.
+- **Retrieval Agent** searches source chunks for a question.
+- **Q&A Agent** answers only from retrieved evidence.
+
+The agent orchestration follows a LangGraph-style design in `agents/graph.py`. The Streamlit page also exposes the workflow as a live execution trace so the demo audience can see the system working step by step.
+
+## Final Demo Pages
+
+The final demo focuses on two pages.
+
+### Final Project Agents
+
+This is the main agent dashboard. It turns one selected report year into a complete ESG intelligence view.
+
+What it shows:
+
+- Live agent narration while the workflow runs.
+- Metric cards for source year, chunk count, keyword count, and dominant ESG theme.
+- Keyword word cloud for the selected report.
+- ESG distribution donut chart.
+- AI insight summary generated by OpenAI when available, or deterministic fallback when no key is available.
+- Source-grounded report Q&A.
+- Q&A retrieval scope selector:
+  - **Current report year**: answer from the selected year only.
+  - **All years (2022-2024)**: answer from a pooled multi-year evidence base.
+- Evidence expanders showing source chunks, year tags, chunk ids, and retrieval scores.
+- Agent execution trace summarizing observable outputs from each step.
+
+### Cross-Year Compare
+
+This page explains how an SDG topic changes across 2022, 2023, and 2024.
+
+What it shows:
+
+- Topic coverage by year.
+- Absolute and percentage-point change from 2022 to 2024.
+- Persistent keywords that appear across all years.
+- Newly prominent keywords by 2024.
+- Dropped keywords that fade out by 2024.
+- Semantic centroid shift using MiniLM embeddings.
+- A grounded cross-year narrative that describes what changed without inventing motives.
+
+Together, these two pages support the final presentation: one page shows the agent workflow, and the other shows structured year-over-year evidence.
+
+## Technology Stack
+
+### App and UI
+
+- **Streamlit**: interactive dashboard and deployment target.
+- **Plotly**: interactive charts and donut charts.
+- **Matplotlib + WordCloud**: word cloud rendering.
+- **streamlit-echarts**: additional interactive visualization support.
+
+### NLP and Data Processing
+
+- **pandas / numpy**: data wrangling and numerical processing.
+- **spaCy**: tokenization, lemmatization, and preprocessing.
+- **scikit-learn**: TF-IDF, cosine similarity, PCA, and clustering utilities.
+- **pdfplumber**: PDF text extraction.
+- **sentence-transformers**: MiniLM sentence embeddings.
+- **gensim**: Word2Vec support for supplemental semantic exploration.
+- **networkx / pyvis**: keyword co-occurrence networks.
+
+### Agent and LLM Layer
+
+- **LangGraph**: graph-style agent workflow structure.
+- **langchain-openai**: LangChain wrapper for OpenAI chat calls.
+- **openai**: OpenAI SDK fallback path.
+- **python-dotenv**: local environment variable loading.
+
+The app remains usable without OpenAI access. If no API key is detected, summaries and Q&A fall back to deterministic evidence-based output. This is important for demo reliability: the dashboard still works if the API key is missing, quota is exhausted, or the model call fails.
+
+## Final Agent Workflow In Detail
+
+The final agent page uses a visible, step-by-step workflow. Each step updates the UI so the audience can see the system progressing through the analysis.
+
+| Step | Agent | What It Does | Output Shown In The App |
+|---|---|---|---|
+| 1 | **Preprocess Agent** | Loads the selected year and prepares report chunks. | Source year and chunk count. |
+| 2 | **Keyword Agent** | Ranks distinctive terms using TF-IDF-style keyword scoring. | Keyword count, top terms, and word cloud. |
+| 3 | **ESG Classifier** | Assigns chunks to Environmental, Social, Governance, or Other. | ESG counts and dominant ESG theme. |
+| 4 | **Visualization Agent** | Builds chart-ready payloads from keywords and classifications. | Word cloud and ESG distribution chart. |
+| 5 | **Summary Agent** | Writes a presentation-ready narrative. | AI insight summary. |
+| 6 | **Retrieval Agent** | Searches source chunks for the user's question. | Retrieved chunks with year, id, score, and text. |
+| 7 | **Q&A Agent** | Answers using only retrieved evidence. | Grounded answer plus source chunks. |
+
+The Summary and Q&A agents use OpenAI when a key is available. Otherwise, they return deterministic fallback output based on the already-computed data and retrieved evidence.
+
+## Cross-Year Method
+
+The cross-year module compares SDG topics across 2022, 2023, and 2024. It does not simply ask an LLM to summarize three reports. Instead, it computes structured metrics first, then optionally asks the LLM to explain those metrics.
+
+The comparison uses:
+
+- **Coverage**: how many chunks mention a topic in each year, and what share of that year's report it represents.
+- **Keyword shift**: which terms stay persistent, newly appear, or drop out by 2024.
+- **Semantic shift**: how far a topic's average embedding moves between years.
+- **Grounded narrative**: a concise explanation constrained to the computed metrics.
+
+This keeps the cross-year story auditable. The LLM can improve wording, but the evidence comes from the computed metrics.
 
 ## Quick Start
 
@@ -41,41 +171,39 @@ pip install -r requirements.txt
 python -m spacy download en_core_web_sm
 ```
 
-Run the Streamlit app:
+Run the dashboard:
 
 ```bash
 streamlit run app.py
 ```
 
-The root `app.py` is the current dashboard entry point. The legacy `app/streamlit_app.py` only shows a compatibility notice.
+The current app entry point is **`app.py`** at the project root. The legacy **`app/streamlit_app.py`** is kept only as a compatibility notice.
 
-## Optional OpenAI Setup
+## OpenAI API Key
 
-The dashboard works without an API key by using deterministic fallback summaries and evidence snippets.
+The app checks for an OpenAI key in this order:
 
-To enable LLM summaries and answers locally, create an ignored local env file:
+1. Key typed into the Streamlit sidebar.
+2. `st.secrets["OPENAI_API_KEY"]` on Streamlit Cloud.
+3. Local environment variable loaded through `.env` / dotenv.
 
-```bash
-OPENAI_API_KEY="sk-..."
-```
-
-For Streamlit Community Cloud, use app secrets:
+For Streamlit Community Cloud, add this to app secrets:
 
 ```toml
 OPENAI_API_KEY = "sk-..."
 ```
 
-The app reads the sidebar key first. If the sidebar is empty, it falls back to Streamlit secrets.
+For a public demo, use a separate OpenAI project key with a low budget limit, or ask users to provide their own key in the sidebar.
 
-## Regenerating Outputs
+## Regenerating Data
 
-The repository already includes processed outputs used by the app. To regenerate them from source PDFs:
+The repository already includes processed outputs used by the dashboard. To regenerate outputs from source reports:
 
 ```bash
 python main.py --audit
 ```
 
-Expected raw PDFs live under `data/raw/`. The pipeline writes per-year outputs under:
+This writes per-year results to:
 
 ```text
 outputs/2022/
@@ -83,104 +211,136 @@ outputs/2023/
 outputs/2024/
 ```
 
-Cross-year snapshots are stored as:
-
-```text
-outputs/cross_year_analysis.json
-outputs/cross_year_analysis.md
-```
-
-To regenerate only the cross-year comparison snapshot:
+To regenerate the cross-year snapshot:
 
 ```bash
 python cross_year_analysis.py
 ```
 
+Cross-year files:
+
+- **`outputs/cross_year_analysis.json`**: cached data used by the app.
+- **`outputs/cross_year_analysis.md`**: human-readable cross-year report.
+
 ## Project Structure
 
-```text
-.
-├── app.py                    # Main Streamlit dashboard
-├── main.py                   # Multi-year pipeline runner
-├── cross_year_analysis.py    # Cross-year metrics and cached snapshot generation
-├── agents/                   # LangGraph-style agent modules
-│   ├── graph.py              # Agent orchestration
-│   ├── llm.py                # OpenAI / fallback generation
-│   ├── retrieve.py           # Single-year and cross-year retrieval
-│   └── ...
-├── app_pages/                # Dashboard pages
-│   ├── final_project_agents.py
-│   ├── cross_year_panel.py
-│   ├── analysis.py
-│   ├── methods.py
-│   └── ...
-├── src/                      # Core NLP pipeline and experiments
-├── outputs/                  # Processed CSV/JSON/embedding outputs
-├── mds/                      # Supporting experiment notes
-├── pic/                      # Figures used by coursework pages
-├── records/                  # Assignment/proposal PDFs
-└── requirements.txt
-```
+### Top-Level Files
 
-## Agent Workflow
+- **`app.py`**: main Streamlit dashboard and sidebar routing.
+- **`main.py`**: multi-year pipeline runner for 2022, 2023, and 2024.
+- **`cross_year_analysis.py`**: generates cross-year metrics and cached snapshots.
+- **`requirements.txt`**: deployment/runtime Python dependencies.
+- **`runtime.txt`**: Python runtime hint for deployment.
+- **`README.md`**: current project documentation.
+- **`readme_old.md`**: preserved README backup.
 
-The Final Project Agents page runs the workflow as visible steps:
+### Top-Level Folders
 
-1. Preprocess Agent loads the selected report year and prepares chunks.
-2. Keyword Agent ranks the most distinctive terms.
-3. ESG Classifier assigns Environmental, Social, Governance, or Other labels.
-4. Visualization Agent prepares word cloud and chart payloads.
-5. Summary Agent writes a presentation-ready narrative using OpenAI when available, otherwise deterministic fallback.
-6. Retrieval Agent finds relevant source chunks for a user question.
-7. Q&A Agent answers from retrieved evidence only.
+- **`agents/`**: LangGraph-style agent modules.
+  - **`graph.py`**: orchestrates analysis and Q&A workflows.
+  - **`llm.py`**: OpenAI calls and deterministic fallback summaries.
+  - **`retrieve.py`**: single-year and cross-year TF-IDF retrieval.
+  - **`corpus.py`**: multi-year chunk loading.
+  - **`preprocess.py`**, **`keywords.py`**, **`classify.py`**, **`visualize.py`**: individual agent steps.
 
-Q&A can search either the current report year or all years from 2022 to 2024.
+- **`app_pages/`**: Streamlit page modules.
+  - **`final_project_agents.py`**: final demo agent dashboard.
+  - **`cross_year_panel.py`**: cross-year comparison page.
+  - **`analysis.py`**, **`methods.py`**, **`project_overview.py`**: supporting analysis and methodology pages.
+  - **`week9_q1.py`**, **`week10_q2.py`**, **`week13_agent.py`**: supplemental exploration pages.
+
+- **`src/`**: core NLP pipeline and experiment scripts.
+  - **`pipeline.py`**: report processing, labeling, TF-IDF, and per-year output generation.
+  - **`extract_pdf.py`**: PDF extraction.
+  - **`embeddings.py`**: MiniLM embedding generation.
+  - **`agent_tools.py`**: tool-style wrappers for agent experiments.
+  - **`bert_experiments.py`**, **`finbert_weak_label_evaluation.py`**: model experiments.
+
+- **`outputs/`**: processed data used by the dashboard.
+  - **`2022/`**, **`2023/`**, **`2024/`**: per-year processed chunks, TF-IDF tables, similarity matrices, and embeddings.
+  - **`cross_year_analysis.json`** and **`cross_year_analysis.md`**: cached cross-year comparison data.
+  - **`legacy/`**: older outputs retained for compatibility.
+
+- **`data/`**: source data folder. Raw PDFs should live under **`data/raw/`**.
+
+- **`mds/`**: supporting markdown notes for BERT, Week 13, and experiment plans/results.
+
+- **`pic/`**: generated figures and screenshots used by supporting pages.
+
+- **`records/`**: assignment PDFs and proposal records.
+
+- **`app/`**: legacy Streamlit entry point kept for compatibility.
 
 ## Mermaid Flowchart
 
 ```mermaid
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "fontSize": "18px",
+    "primaryTextColor": "#0f172a",
+    "lineColor": "#475569"
+  }
+}}%%
 flowchart LR
-    A["TSMC ESG Reports<br/>2022 / 2023 / 2024"] --> B["PDF / Processed Text Inputs"]
-    B --> C["Preprocess Agent<br/>clean text + create chunks"]
-    C --> D["Keyword Agent<br/>TF-IDF term ranking"]
-    C --> E["ESG Classifier<br/>E / S / G / Other + SDG labels"]
-    D --> F["Visualization Agent<br/>word cloud + charts"]
-    E --> F
-    D --> G["Summary Agent<br/>OpenAI or fallback narrative"]
-    E --> G
+    A["TSMC ESG Reports<br/>2022 / 2023 / 2024"] --> B["Processed Report Chunks<br/>outputs/{year}/chunks_processed.csv"]
+    B --> P["Preprocess Agent<br/>load year + prepare chunks"]
+    P --> K["Keyword Agent<br/>TF-IDF ranking"]
+    P --> C["ESG Classifier<br/>E / S / G / Other + SDG labels"]
+    K --> V["Visualization Agent<br/>word cloud + chart payloads"]
+    C --> V
+    K --> S["Summary Agent<br/>OpenAI or fallback narrative"]
+    C --> S
 
-    C --> H["Retrieval Agent"]
-    H --> I{"Retrieval Scope"}
-    I --> J["Current Year<br/>single-report evidence"]
-    I --> K["All Years<br/>2022-2024 evidence pool"]
-    J --> L["Q&A Agent<br/>source-grounded answer"]
-    K --> L
+    P --> R["Retrieval Agent<br/>single-year or cross-year search"]
+    R --> D{"Retrieval Scope"}
+    D --> Y["Current Year<br/>selected report only"]
+    D --> X["All Years<br/>2022-2024 pool"]
+    Y --> Q["Q&A Agent<br/>grounded answer with source chunks"]
+    X --> Q
 
-    E --> M["Cross-Year Metrics<br/>coverage + keyword shift"]
-    C --> N["MiniLM Embeddings<br/>semantic centroid shift"]
-    M --> O["Cross-Year Compare Page"]
-    N --> O
+    C --> M["Cross-Year Metrics<br/>coverage + keyword shift"]
+    P --> E["MiniLM Embeddings<br/>semantic centroid shift"]
+    M --> CY["Cross-Year Compare Page"]
+    E --> CY
 
-    F --> P["Final Project Agents Page"]
-    G --> P
-    L --> P
-    O --> Q["Demo Narrative"]
-    P --> Q
+    V --> FPA["Final Project Agents Page"]
+    S --> FPA
+    Q --> FPA
+    CY --> DEMO["Final Demo Story"]
+    FPA --> DEMO
+
+    classDef data fill:#eff6ff,stroke:#2563eb,stroke-width:3px,color:#0f172a;
+    classDef agent fill:#ecfeff,stroke:#0f766e,stroke-width:4px,color:#0f172a;
+    classDef llm fill:#fef3c7,stroke:#d97706,stroke-width:4px,color:#0f172a;
+    classDef page fill:#f5f3ff,stroke:#7c3aed,stroke-width:3px,color:#0f172a;
+    classDef decision fill:#fff7ed,stroke:#ea580c,stroke-width:3px,color:#0f172a;
+    classDef output fill:#dcfce7,stroke:#16a34a,stroke-width:3px,color:#0f172a;
+
+    class A,B,M,E data;
+    class P,K,C,V,R agent;
+    class S,Q llm;
+    class D decision;
+    class CY,FPA page;
+    class DEMO,Y,X output;
+
+    linkStyle default stroke:#475569,stroke-width:3px;
 ```
 
 ## Recommended Demo Flow
 
-1. Open **Final Project Agents** and run the LangGraph analysis.
-2. Show the live agent narration as the workflow executes.
-3. Point out the word cloud, ESG distribution, AI insight summary, and evidence details.
-4. Ask a single-year question.
-5. Switch Q&A retrieval scope to **All years (2022-2024)** and ask a cross-year question.
-6. Open **Cross-Year Compare** to show structured year-over-year metrics.
-7. Use **Coursework Archive** pages only if the audience asks for earlier assignment evidence.
+1. Open **Final Project Agents**.
+2. Run the LangGraph analysis and show the live agent narration.
+3. Explain the metric cards, word cloud, and ESG distribution.
+4. Show the AI insight summary and mention OpenAI/fallback behavior.
+5. Ask a single-year question and open the retrieved source chunks.
+6. Switch Q&A retrieval scope to **All years (2022-2024)** and ask a cross-year question.
+7. Open **Cross-Year Compare** to show structured year-over-year evidence.
+8. Close by explaining that the final answer is grounded in computed metrics and retrieved chunks, not unsupported generation.
 
 ## Notes
 
-- `.streamlit/secrets.toml`, `.env.example`, logs, caches, and generated experiment artifacts are ignored by Git.
-- `outputs/legacy/` is retained for older coursework pages.
-- The app is designed to remain usable without OpenAI quota or network access by falling back to deterministic outputs.
-
+- The app is safe to run without an API key.
+- `.streamlit/secrets.toml`, `.env.example`, logs, caches, and large generated artifacts are ignored by Git.
+- The public deployment should use Streamlit secrets or sidebar API input instead of committing API keys.
+- Some legacy outputs are intentionally retained so older supporting views still load.
