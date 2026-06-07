@@ -70,3 +70,4 @@ kiwi/
 # mds/
 
 .env.example
+NEXT_AGENT_UI_PLAN.md

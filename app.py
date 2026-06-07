@@ -1386,9 +1386,28 @@ def render_embedding_inspector(year: str):
 # =========================
 st.sidebar.header("Controls")
 
+page_section = st.sidebar.radio(
+    "Section",
+    ["Final Demo", "Coursework Archive"],
+    horizontal=True,
+)
+
+page_options = (
+    ["Final Project Agents", "Cross-Year Compare"]
+    if page_section == "Final Demo"
+    else [
+        "Project Overview",
+        "Methods",
+        "Analysis",
+        "Kiwi's Week9 Q1",
+        "Kiwi's Week10 Q2",
+        "Week 13 Agent",
+    ]
+)
+
 page_mode = st.sidebar.selectbox(
     "Page",
-    ["Final Project Agents", "Cross-Year Compare"]
+    page_options,
 )
 
 theme_mode = None
