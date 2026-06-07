@@ -12,8 +12,6 @@ from agents import answer_question, run_analysis
 
 
 SAMPLE_QUESTIONS = [
-    "How did the labor / supply-chain topic change across 2022, 2023 and 2024?",
-    "Compare how water management is discussed over the three years.",
     "What are the main environmental topics in the report?",
     "How does TSMC discuss water management?",
     "What does the report say about carbon reduction?",
@@ -291,61 +289,59 @@ def render_page(render_page_header, render_metric_grid, render_card_grid, st) ->
             )
             fig.update_layout(height=420, margin=dict(l=10, r=10, t=20, b=10))
             st.plotly_chart(fig, use_container_width=True)
+            st.caption("E / S / G / Other from the ESG classifier (one label per chunk) — a different scheme from the keyword 'group' (report sections) below.")
         else:
             st.info("No ESG classification data yet.")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    st.subheader("Explore agent outputs")
-    tab_keywords, tab_evidence, tab_summary, tab_qa = st.tabs(
-        ["Keywords", "ESG evidence", "AI summary", "Ask the report"]
-    )
-
-    with tab_keywords:
-        keyword_df = _keyword_dataframe(state)
-        group_options = ["All"] + sorted([value for value in keyword_df["group"].dropna().astype(str).unique() if value])
-        selected_group = st.selectbox("Keyword group", group_options)
-        filtered_keywords = keyword_df if selected_group == "All" else keyword_df[keyword_df["group"] == selected_group]
-        st.dataframe(filtered_keywords.head(top_n), use_container_width=True, hide_index=True)
-        if not filtered_keywords.empty:
-            chart_df = filtered_keywords.head(18).sort_values("score", ascending=True)
-            fig = px.bar(chart_df, x="score", y="term", orientation="h", color="group")
-            fig.update_layout(height=420, yaxis_title="", xaxis_title="score")
-            st.plotly_chart(fig, use_container_width=True)
-
-    with tab_evidence:
-        class_df = _classification_dataframe(state)
-        label_options = ["All"] + sorted([value for value in class_df["label"].dropna().unique() if value])
-        selected_label = st.selectbox("ESG category", label_options)
-        evidence_df = class_df if selected_label == "All" else class_df[class_df["label"] == selected_label]
-        display_cols = [col for col in ["label", "confidence", "reason", "section_label", "sdg_labels", "text"] if col in evidence_df.columns]
-        st.dataframe(evidence_df[display_cols].head(20), use_container_width=True, hide_index=True)
-
-    with tab_summary:
-        st.markdown(state.get("summary", "No summary generated yet."))
-
-    with tab_qa:
-        question_choice = st.selectbox("Sample questions", SAMPLE_QUESTIONS)
-        question = st.text_area("Ask a question about the report", value=question_choice, height=90)
-        # Default to cross-year so the demo's flagship cross-year questions work out of the box.
-        scope_label = st.radio(
-            "Retrieval scope",
-            ["All years (2022-2024)", f"Single year ({year})"],
-            index=0,
-            horizontal=True,
-            key="fp_qa_scope",
-            help="Cross-year is the default so questions like 'how did labor change over the years' retrieve evidence from all three reports.",
+    # --- AI insight summary, promoted above the tabs as the headline AI output ---
+    with st.container(border=True):
+        st.markdown("#### ✦ AI insight summary")
+        st.caption(
+            f"Written by the Summary agent · style: {summary_mode} · "
+            + ("LLM (OpenAI)" if api_key else "deterministic fallback (no API key)")
         )
-        scope = "single" if scope_label.startswith("Single") else "cross_year"
-        if st.button("Ask report", key="fp_ask"):
-            with st.spinner("Retrieving evidence and generating answer..."):
-                st.session_state.fp_agent_state = answer_question(state, question, scope=scope)
-                state = st.session_state.fp_agent_state
-        if state.get("qa_answer"):
-            st.markdown("#### Answer")
-            st.markdown(state["qa_answer"])
-        if state.get("retrieved_chunks"):
-            st.markdown("#### Source chunks")
-            for item in state["retrieved_chunks"]:
-                year_tag = f"{item.get('year', '')} | " if item.get("year") else ""
-                with st.expander(f"{year_tag}Chunk {item['chunk_id']} | score {item['score']}"):
-                    st.write(item["text"])
+        st.markdown(state.get("summary") or "Run the analysis to generate a summary.")
+
+    # --- Ask the report: the interactive AI feature, kept prominent ---
+    st.subheader("Ask the report")
+    question_choice = st.selectbox("Sample questions", SAMPLE_QUESTIONS)
+    question = st.text_area("Ask a question about the report", value=question_choice, height=90)
+    st.caption(
+        f"Answers are grounded in the {year} report (set via **Report year** in the sidebar). "
+        "For three-year comparison, use the **Cross-Year Compare** page."
+    )
+    if st.button("Ask report", key="fp_ask"):
+        with st.spinner("Retrieving evidence and generating answer..."):
+            st.session_state.fp_agent_state = answer_question(state, question, scope="single")
+            state = st.session_state.fp_agent_state
+    if state.get("qa_answer"):
+        st.markdown("#### Answer")
+        st.markdown(state["qa_answer"])
+    if state.get("retrieved_chunks"):
+        st.markdown("#### Source chunks")
+        for item in state["retrieved_chunks"]:
+            year_tag = f"{item.get('year', '')} | " if item.get("year") else ""
+            with st.expander(f"{year_tag}Chunk {item['chunk_id']} | score {item['score']}"):
+                st.write(item["text"])
+
+    # --- Supporting deterministic detail, collapsed so the AI stays the focus ---
+    with st.expander("Evidence & analysis details (keyword scores + ESG classification)", expanded=False):
+        ev_keywords, ev_evidence = st.tabs(["Keywords", "ESG evidence"])
+        with ev_keywords:
+            keyword_df = _keyword_dataframe(state)
+            group_options = ["All"] + sorted([value for value in keyword_df["group"].dropna().astype(str).unique() if value])
+            selected_group = st.selectbox("Keyword group", group_options)
+            filtered_keywords = keyword_df if selected_group == "All" else keyword_df[keyword_df["group"] == selected_group]
+            # Drop the always-empty frequency column (the section TF-IDF source has no raw counts).
+            show_cols = [c for c in ["term", "score", "group"] if c in filtered_keywords.columns]
+            st.dataframe(filtered_keywords[show_cols].head(top_n), use_container_width=True, hide_index=True)
+            st.caption("score = TF-IDF importance (higher = more characteristic). group = report section, not the E/S/G label. The word cloud above is the visual version of this table.")
+        with ev_evidence:
+            class_df = _classification_dataframe(state)
+            label_options = ["All"] + sorted([value for value in class_df["label"].dropna().unique() if value])
+            selected_label = st.selectbox("ESG category", label_options)
+            evidence_df = class_df if selected_label == "All" else class_df[class_df["label"] == selected_label]
+            display_cols = [col for col in ["label", "confidence", "reason", "section_label", "sdg_labels", "text"] if col in evidence_df.columns]
+            st.dataframe(evidence_df[display_cols].head(20), use_container_width=True, hide_index=True)
+            st.caption("Each row = one report chunk and why the classifier tagged it E / S / G / Other.")

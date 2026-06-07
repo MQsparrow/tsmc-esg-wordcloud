@@ -19,32 +19,45 @@ def has_openai_key(api_key: str | None = None) -> bool:
     return bool(_resolve_api_key(api_key))
 
 
-def _try_langchain(prompt: str, model: str, api_key: str | None = None) -> str | None:
+def _try_langchain(prompt: str, model: str, api_key: str | None = None) -> tuple[str | None, str]:
     try:
         from langchain_openai import ChatOpenAI
 
         llm = ChatOpenAI(model=model, temperature=0.2, api_key=_resolve_api_key(api_key))
         response = llm.invoke(prompt)
-        return str(getattr(response, "content", response)).strip()
-    except Exception:
-        return None
+        return str(getattr(response, "content", response)).strip(), ""
+    except Exception as exc:
+        return None, f"langchain_openai: {type(exc).__name__}: {str(exc)[:180]}"
 
 
-def _try_openai(prompt: str, model: str, api_key: str | None = None) -> str | None:
+def _try_openai(prompt: str, model: str, api_key: str | None = None) -> tuple[str | None, str]:
     try:
         from openai import OpenAI
 
         client = OpenAI(api_key=_resolve_api_key(api_key))
         response = client.responses.create(model=model, input=prompt)
-        return str(response.output_text).strip()
-    except Exception:
-        return None
+        return str(response.output_text).strip(), ""
+    except Exception as exc:
+        return None, f"openai: {type(exc).__name__}: {str(exc)[:180]}"
+
+
+def generate_text_ex(prompt: str, model: str = "gpt-4.1-mini", api_key: str | None = None) -> tuple[str | None, str]:
+    """Return (text, error). error is '' on success, 'no_key' when no key is configured,
+    otherwise the underlying LLM error string. Tries langchain first, then the openai SDK."""
+    if not has_openai_key(api_key):
+        return None, "no_key"
+    text, err1 = _try_langchain(prompt, model, api_key=api_key)
+    if text:
+        return text, ""
+    text, err2 = _try_openai(prompt, model, api_key=api_key)
+    if text:
+        return text, ""
+    return None, " | ".join(e for e in (err1, err2) if e)
 
 
 def generate_text(prompt: str, model: str = "gpt-4.1-mini", api_key: str | None = None) -> str | None:
-    if not has_openai_key(api_key):
-        return None
-    return _try_langchain(prompt, model, api_key=api_key) or _try_openai(prompt, model, api_key=api_key)
+    text, _ = generate_text_ex(prompt, model, api_key=api_key)
+    return text
 
 
 def fallback_summary(state: dict[str, Any]) -> str:
@@ -53,10 +66,9 @@ def fallback_summary(state: dict[str, Any]) -> str:
     top_terms = ", ".join(str(item.get("term", "")) for item in keywords if item.get("term"))
     dominant = max(counts.items(), key=lambda item: item[1])[0] if counts else "Environmental"
     return (
-        f"The report is most strongly represented by {dominant} content in the current chunk-level analysis. "
-        f"Important terms include {top_terms or 'ESG-related operational and sustainability terms'}. "
-        "The dashboard combines deterministic text mining with optional LLM summarization so the demo remains stable "
-        "even when an API key is not available."
+        f"Based on chunk-level analysis, this report is most strongly represented by {dominant} content. "
+        f"Frequently emphasized terms include {top_terms or 'ESG-related operational and sustainability terms'}. "
+        "(Generated without an API key — add one for a fuller AI-written summary.)"
     )
 
 
@@ -126,15 +138,19 @@ Return:
 2. 2-3 evidence points, each citing its year and chunk id.
 3. List the (year, chunk id) pairs you used.
 """
-    llm_answer = generate_text(prompt, model=model, api_key=api_key)
+    llm_answer, err = generate_text_ex(prompt, model=model, api_key=api_key)
     if llm_answer:
         return llm_answer
     evidence = "\n\n".join(f"- [{_chunk_tag(item)}] (score {item['score']}): {item['text'][:260]}..." for item in retrieved_chunks[:4])
     span = f" across {', '.join(years_present)}" if multi_year else (f" ({years_present[0]})" if years_present else "")
-    return (
-        f"Relevant evidence was found for this question{span}. "
-        f"Without an API key, here are the closest report chunks (each tagged with its year):\n\n{evidence}"
-    )
+    if err == "no_key":
+        reason = "Without an API key, here are the closest report chunks (each tagged with its year):"
+    else:
+        reason = (
+            f"An API key was provided but the LLM call failed, so showing retrieved evidence instead.\n\n"
+            f"**LLM error:** {err}\n\nClosest report chunks (each tagged with its year):"
+        )
+    return f"Relevant evidence was found for this question{span}. {reason}\n\n{evidence}"
 
 
 def _fmt_terms(terms: list[str], limit: int = 8) -> str:
@@ -179,21 +195,47 @@ def summarize_cross_year(
     The LLM is instructed to describe only the supplied numbers, not to speculate.
     """
     sdg = metrics.get("sdg", "")
+    cov = metrics.get("coverage") or {}
+    ks = metrics.get("keyword_shift") or {}
+    cs = (metrics.get("centroid_shift") or {}).get("euclid") or {}
+    count = cov.get("count", {})
+    share = cov.get("share_pct", {})
+    years = metrics.get("years", ["2022", "2023", "2024"])
+
+    coverage_line = "; ".join(f"{y}: {count.get(y, 0)} chunks ({share.get(y, 0)}% of that year)" for y in years)
+    coverage_line += (f"; net change 2022->2024 {cov.get('delta_abs_22_24', 0):+d} chunks "
+                      f"({cov.get('delta_share_pp_22_24', 0):+.1f} percentage points of share).")
+    shift_line = (
+        f"moved {cs.get('d_22_23')} from 2022 to 2023, then {cs.get('d_23_24')} from 2023 to 2024 "
+        f"(total path {cs.get('path_total')}), vs. a direct 2022->2024 distance of {cs.get('d_22_24_direct')}"
+        if cs else "not available"
+    )
+
     prompt = f"""
-You are reporting cross-year (2022/2023/2024) text-mining results for the TSMC ESG topic {sdg}.
+You are helping present a text mining final project about TSMC ESG reports.
 
-Write a concise {mode} narrative describing ONLY the metrics below. These are deterministic
-text-mining outputs (TF-IDF keyword sets, chunk-coverage shares, embedding centroid distances).
+Write a concise, flowing {mode} narrative about how the topic {sdg} changed across 2022, 2023, and 2024,
+based only on these cross-year analysis results.
 
-Metrics (JSON):
-{metrics}
+Coverage (how much of each report this topic occupies):
+{coverage_line}
 
-Strict rules:
-- Describe only what the numbers show: how the coverage share changed, which keywords are
-  persistent / newly appeared / dropped, and the size of the semantic centroid shift.
-- Do NOT speculate about the company's motivations, strategy, or causes.
-- Do NOT introduce facts, events, or keywords that are not in the metrics.
-- Attribute every quantitative claim to its year(s).
-- Keep it presentation-ready.
+Keyword change (TF-IDF top terms):
+- Stayed all three years: {_fmt_terms(ks.get('persistent', []), 12)}
+- Newly prominent by 2024: {_fmt_terms(ks.get('new', []), 12)}
+- Faded out by 2024: {_fmt_terms(ks.get('dropped', []), 12)}
+
+Semantic shift (how far the topic's average wording moved, embedding distance):
+{shift_line}
+
+Requirements:
+- Open with the single most notable change, not with a list of numbers.
+- Tell it as one connected story: tie the keyword turnover to the semantic shift (what kind of
+  vocabulary came in vs. went out, and whether the meaning moved a lot or a little).
+- If the total path is clearly larger than the direct 2022->2024 distance, point out the topic
+  moved non-linearly (one direction, then another).
+- Use a few representative keywords as evidence; weave the key figures into prose, don't list them all.
+- Keep it presentation-ready (2 short paragraphs).
+- Describe WHAT changed, not WHY. Do not invent facts, events, products, or company motives beyond the analysis above.
 """
     return generate_text(prompt, model=model, api_key=api_key) or cross_year_fallback_summary(metrics)

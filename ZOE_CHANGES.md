@@ -62,19 +62,51 @@ for the presentation. **No original `outputs/**` CSV/NPZ was modified — read-o
   current sidebar key/model each rerun, so a freshly typed API key takes effect for Q&A
   without re-running the whole analysis.
 
-## Known issue / how to actually test the LLM path
-The LLM answers and summaries fall back to deterministic text unless the OpenAI client
-libraries are installed. They are listed in `requirements.txt` but are **not installed in
-the current environment**, so even a valid API key currently produces the fallback answer.
+## Round 2 — UI cleanup + LLM hardening
 
-To enable real LLM output:
+### LLM path is now testable
+- The OpenAI client libraries (`openai`, `langchain-openai`, `langgraph`) are listed in
+  `requirements.txt`. Install them to enable real LLM output:
+  ```bash
+  pip install openai langchain-openai langgraph
+  ```
+  Then enter the key in the sidebar (or set `OPENAI_API_KEY`). With no key / no libraries,
+  everything still runs in deterministic fallback mode — the demo-day safety net.
+- **Error transparency** (`agents/llm.py`): the LLM helpers used to swallow every error and
+  always print "Without an API key". They now surface the real reason — e.g. a `401`
+  (invalid key) or `429` (quota exceeded) is shown in the answer, so you can tell a quota
+  problem from a code problem. (A `429 RateLimitError` means the OpenAI account is out of
+  quota — add billing; it is not a code issue.)
+- **Q&A key sync** (`final_project_agents.py`): the cached agent state is re-synced with the
+  current sidebar key/model on every rerun, so a freshly typed key works for Q&A without
+  re-running the whole analysis. The sidebar shows whether LLM or fallback mode is active.
 
-```bash
-pip install openai langchain-openai langgraph
-```
+### Cross-year narrative quality
+- `agents/llm.summarize_cross_year`: the prompt was rewritten to read like an analyst, not a
+  CSV dump — it is fed clean, readable fields (not a raw JSON blob) and asked to lead with the
+  most notable change and tie the keyword turnover to the semantic shift, in two short
+  paragraphs. Still grounded: describe WHAT changed, not WHY; no invented facts or motives.
+- `agents/llm.fallback_summary`: dropped the meta "the dashboard combines…" sentence so the
+  no-key summary reads about the report, not about the system.
 
-Then enter the key in the sidebar (or set `OPENAI_API_KEY`). With no key / no libraries,
-everything still runs in deterministic fallback mode — that is the intended demo-day safety net.
+### Single-year vs cross-year split (clearer page roles)
+- **Final Project Agents = single year**, **Cross-Year Compare = three years.** Removed the
+  cross-year sample questions and the Retrieval-scope selector from the Q&A; it now answers
+  only the sidebar's selected year, with a one-line pointer to the Cross-Year Compare page.
+  (Cross-year retrieval capability is retained in `corpus.py` / `retrieve.py`, just not
+  surfaced here — ready for an agent to call later.)
+
+### Final Project Agents page redesign (AI-first, light touch)
+- The AI summary is promoted out of a tab into a prominent bordered card above the fold,
+  labelled with which agent wrote it, the style, and whether it used the LLM or the fallback.
+- "Ask the report" is now its own prominent section (no longer buried in a tab).
+- The deterministic detail (Keywords table + ESG evidence) is collapsed into a single
+  `Evidence & analysis details` expander, so the AI stays the focus but the proof is one click away.
+- Removed the redundant (and visually broken, double-stacked) keyword bar chart; the word
+  cloud already is the visual version of the keyword table.
+- Hid the always-empty `frequency` column and added captions clarifying that the keyword
+  `group` (report section) is a different scheme from the E/S/G classification.
+- Simplified the hero banner.
 
 ## Suggested next step (for Kiwi)
 This will look much cooler once **Kiwi's agent workflow is wired in on top**: instead of the
