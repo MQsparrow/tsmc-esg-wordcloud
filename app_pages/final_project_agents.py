@@ -12,6 +12,8 @@ from agents import answer_question, run_analysis
 
 
 SAMPLE_QUESTIONS = [
+    "How did the labor / supply-chain topic change across 2022, 2023 and 2024?",
+    "Compare how water management is discussed over the three years.",
     "What are the main environmental topics in the report?",
     "How does TSMC discuss water management?",
     "What does the report say about carbon reduction?",
@@ -176,16 +178,13 @@ def render_page(render_page_header, render_metric_grid, render_card_grid, st) ->
         """
         <div class="fp-hero">
             <div class="fp-kicker">LangGraph multi-agent workflow</div>
-            <h2>Analyze ESG reports through an interactive agent dashboard</h2>
-            <p>
-                The system turns TSMC sustainability report text into keywords, ESG categories,
-                visual summaries, source-grounded answers, and presentation-ready insights.
-            </p>
+            <h2>TSMC ESG analysis dashboard</h2>
+            <p>Five agents turn one sustainability report into keywords, ESG categories, charts, a summary, and source-grounded Q&A.</p>
             <div class="fp-chip-row">
-                <div class="fp-chip">Preprocessing Agent</div>
-                <div class="fp-chip">Keyword Agent</div>
+                <div class="fp-chip">Preprocessing</div>
+                <div class="fp-chip">Keywords</div>
                 <div class="fp-chip">ESG Classifier</div>
-                <div class="fp-chip">Visualization Agent</div>
+                <div class="fp-chip">Visualization</div>
                 <div class="fp-chip">Q&A Retrieval</div>
             </div>
         </div>
@@ -226,8 +225,9 @@ def render_page(render_page_header, render_metric_grid, render_card_grid, st) ->
         st.warning(raw_text)
         raw_text = ""
 
+    # Effective key for this rerun: session text box first, then configured secret.
+    api_key = session_api_key.strip() or _get_configured_api_key(st)
     if run_clicked or "fp_agent_state" not in st.session_state:
-        api_key = session_api_key.strip() or _get_configured_api_key(st)
         with st.spinner("Running ESG agents..."):
             st.session_state.fp_agent_state = run_analysis(
                 raw_text=raw_text,
@@ -239,6 +239,14 @@ def render_page(render_page_header, render_metric_grid, render_card_grid, st) ->
                 model=model,
             )
     state = st.session_state.fp_agent_state
+    # Keep the cached agent state in sync with the current key/model so the Q&A tab
+    # uses a freshly typed key without needing to re-run the whole analysis.
+    state["api_key"] = api_key
+    state["model"] = model
+    if api_key:
+        st.sidebar.caption("OpenAI key detected — LLM answers/summaries active (requires the `openai` package).")
+    else:
+        st.sidebar.caption("No OpenAI key — running deterministic fallback mode.")
 
     errors = state.get("errors", [])
     if errors:
@@ -318,9 +326,19 @@ def render_page(render_page_header, render_metric_grid, render_card_grid, st) ->
     with tab_qa:
         question_choice = st.selectbox("Sample questions", SAMPLE_QUESTIONS)
         question = st.text_area("Ask a question about the report", value=question_choice, height=90)
+        # Default to cross-year so the demo's flagship cross-year questions work out of the box.
+        scope_label = st.radio(
+            "Retrieval scope",
+            ["All years (2022-2024)", f"Single year ({year})"],
+            index=0,
+            horizontal=True,
+            key="fp_qa_scope",
+            help="Cross-year is the default so questions like 'how did labor change over the years' retrieve evidence from all three reports.",
+        )
+        scope = "single" if scope_label.startswith("Single") else "cross_year"
         if st.button("Ask report", key="fp_ask"):
             with st.spinner("Retrieving evidence and generating answer..."):
-                st.session_state.fp_agent_state = answer_question(state, question)
+                st.session_state.fp_agent_state = answer_question(state, question, scope=scope)
                 state = st.session_state.fp_agent_state
         if state.get("qa_answer"):
             st.markdown("#### Answer")
@@ -328,5 +346,6 @@ def render_page(render_page_header, render_metric_grid, render_card_grid, st) ->
         if state.get("retrieved_chunks"):
             st.markdown("#### Source chunks")
             for item in state["retrieved_chunks"]:
-                with st.expander(f"Chunk {item['chunk_id']} | score {item['score']}"):
+                year_tag = f"{item.get('year', '')} | " if item.get("year") else ""
+                with st.expander(f"{year_tag}Chunk {item['chunk_id']} | score {item['score']}"):
                     st.write(item["text"])

@@ -1,0 +1,1116 @@
+{
+  "years": [
+    "2022",
+    "2023",
+    "2024"
+  ],
+  "top_n": 15,
+  "sdgs": [
+    "SDG12_consumption",
+    "SDG13_climate",
+    "SDG17_partnership",
+    "SDG3_health",
+    "SDG4_education",
+    "SDG6_water",
+    "SDG7_energy",
+    "SDG8_labor",
+    "SDG9_innovation"
+  ],
+  "consistency_notes": [
+    "chunks_processed.csv columns are identical across all three years: ['chunk_id', 'raw_text', 'clean_text', 'section_label', 'orientation', 'sdg_labels', 'sdg_confidence', 'issue_frame', 'issue_frame_confidence']",
+    "2022: chunk count = embedding count = 229; embedding dim = 384.",
+    "2023: chunk count = embedding count = 220; embedding dim = 384.",
+    "2024: chunk count = embedding count = 272; embedding dim = 384.",
+    "tfidf_by_sdg topic set is identical across years: 9 SDGs ['SDG12_consumption', 'SDG13_climate', 'SDG17_partnership', 'SDG3_health', 'SDG4_education', 'SDG6_water', 'SDG7_energy', 'SDG8_labor', 'SDG9_innovation'].",
+    "sdg_labels is multi-label (comma-separated). Chunks with multiple labels: 2022=35, 2023=42, 2024=46. Coverage counts use label explosion (a chunk can count toward several SDGs), so per-year shares sum to > 100%.",
+    "WARNING: schema gap: chunks_processed sdg_labels also contains an `unclassified` bucket (no SDG assigned, never combined with other labels), but tfidf_by_sdg holds only the 9 formal SDGs with no unclassified row. Unclassified chunks: 2022=88(38%), 2023=69(31%), 2024=91(33%). Table 1 keeps the unclassified row for reconciliation; the TF-IDF and centroid views cover only the 9 formal SDGs."
+  ],
+  "coverage": {
+    "totals": {
+      "2022": 229,
+      "2023": 220,
+      "2024": 272
+    },
+    "assignments": {
+      "2022": 264,
+      "2023": 262,
+      "2024": 318
+    },
+    "rows": [
+      {
+        "sdg": "SDG12_consumption",
+        "count": {
+          "2022": 28,
+          "2023": 29,
+          "2024": 36
+        },
+        "share_pct": {
+          "2022": 12.23,
+          "2023": 13.18,
+          "2024": 13.24
+        },
+        "delta_abs_22_24": 8,
+        "delta_pct_22_24": 28.6,
+        "delta_share_pp_22_24": 1.0
+      },
+      {
+        "sdg": "SDG13_climate",
+        "count": {
+          "2022": 28,
+          "2023": 28,
+          "2024": 29
+        },
+        "share_pct": {
+          "2022": 12.23,
+          "2023": 12.73,
+          "2024": 10.66
+        },
+        "delta_abs_22_24": 1,
+        "delta_pct_22_24": 3.6,
+        "delta_share_pp_22_24": -1.6
+      },
+      {
+        "sdg": "SDG17_partnership",
+        "count": {
+          "2022": 24,
+          "2023": 28,
+          "2024": 38
+        },
+        "share_pct": {
+          "2022": 10.48,
+          "2023": 12.73,
+          "2024": 13.97
+        },
+        "delta_abs_22_24": 14,
+        "delta_pct_22_24": 58.3,
+        "delta_share_pp_22_24": 3.5
+      },
+      {
+        "sdg": "SDG3_health",
+        "count": {
+          "2022": 28,
+          "2023": 33,
+          "2024": 35
+        },
+        "share_pct": {
+          "2022": 12.23,
+          "2023": 15.0,
+          "2024": 12.87
+        },
+        "delta_abs_22_24": 7,
+        "delta_pct_22_24": 25.0,
+        "delta_share_pp_22_24": 0.6
+      },
+      {
+        "sdg": "SDG4_education",
+        "count": {
+          "2022": 27,
+          "2023": 33,
+          "2024": 41
+        },
+        "share_pct": {
+          "2022": 11.79,
+          "2023": 15.0,
+          "2024": 15.07
+        },
+        "delta_abs_22_24": 14,
+        "delta_pct_22_24": 51.9,
+        "delta_share_pp_22_24": 3.3
+      },
+      {
+        "sdg": "SDG6_water",
+        "count": {
+          "2022": 13,
+          "2023": 16,
+          "2024": 22
+        },
+        "share_pct": {
+          "2022": 5.68,
+          "2023": 7.27,
+          "2024": 8.09
+        },
+        "delta_abs_22_24": 9,
+        "delta_pct_22_24": 69.2,
+        "delta_share_pp_22_24": 2.4
+      },
+      {
+        "sdg": "SDG7_energy",
+        "count": {
+          "2022": 11,
+          "2023": 10,
+          "2024": 15
+        },
+        "share_pct": {
+          "2022": 4.8,
+          "2023": 4.55,
+          "2024": 5.51
+        },
+        "delta_abs_22_24": 4,
+        "delta_pct_22_24": 36.4,
+        "delta_share_pp_22_24": 0.7
+      },
+      {
+        "sdg": "SDG8_labor",
+        "count": {
+          "2022": 11,
+          "2023": 11,
+          "2024": 8
+        },
+        "share_pct": {
+          "2022": 4.8,
+          "2023": 5.0,
+          "2024": 2.94
+        },
+        "delta_abs_22_24": -3,
+        "delta_pct_22_24": -27.3,
+        "delta_share_pp_22_24": -1.9
+      },
+      {
+        "sdg": "SDG9_innovation",
+        "count": {
+          "2022": 6,
+          "2023": 5,
+          "2024": 3
+        },
+        "share_pct": {
+          "2022": 2.62,
+          "2023": 2.27,
+          "2024": 1.1
+        },
+        "delta_abs_22_24": -3,
+        "delta_pct_22_24": -50.0,
+        "delta_share_pp_22_24": -1.5
+      },
+      {
+        "sdg": "unclassified",
+        "count": {
+          "2022": 88,
+          "2023": 69,
+          "2024": 91
+        },
+        "share_pct": {
+          "2022": 38.43,
+          "2023": 31.36,
+          "2024": 33.46
+        },
+        "delta_abs_22_24": 3,
+        "delta_pct_22_24": 3.4,
+        "delta_share_pp_22_24": -5.0
+      }
+    ]
+  },
+  "keyword_shift": {
+    "SDG12_consumption": {
+      "sdg": "SDG12_consumption",
+      "top_terms": {
+        "2022": [
+          "waste",
+          "water",
+          "metric",
+          "carbon",
+          "wastewater",
+          "recycling",
+          "vendor",
+          "consumption",
+          "recycle",
+          "treatment",
+          "wafer",
+          "chemical",
+          "substance",
+          "increase",
+          "hazardous"
+        ],
+        "2023": [
+          "waste",
+          "chemical",
+          "material",
+          "carbon",
+          "treatment",
+          "wastewater",
+          "safety",
+          "vendor",
+          "substance",
+          "raw",
+          "recycling",
+          "acid",
+          "recycle",
+          "raw material",
+          "target"
+        ],
+        "2024": [
+          "material",
+          "supplier",
+          "chemical",
+          "wastewater",
+          "reduce",
+          "acid",
+          "metric",
+          "safety",
+          "wafer",
+          "recycling",
+          "treatment",
+          "substance",
+          "emission",
+          "carbon",
+          "control"
+        ]
+      },
+      "persistent": [
+        "carbon",
+        "chemical",
+        "recycling",
+        "substance",
+        "treatment",
+        "wastewater"
+      ],
+      "new": [
+        "acid",
+        "control",
+        "emission",
+        "material",
+        "raw",
+        "raw material",
+        "reduce",
+        "safety",
+        "supplier",
+        "target"
+      ],
+      "dropped": [
+        "consumption",
+        "hazardous",
+        "increase",
+        "recycle",
+        "vendor",
+        "waste",
+        "water"
+      ]
+    },
+    "SDG13_climate": {
+      "sdg": "SDG13_climate",
+      "top_terms": {
+        "2022": [
+          "carbon",
+          "climate",
+          "renewable",
+          "water",
+          "ghg",
+          "renewable energy",
+          "carbon credit",
+          "credit",
+          "ghg emission",
+          "climate change",
+          "gwh",
+          "change",
+          "save",
+          "carbon reduction",
+          "scope"
+        ],
+        "2023": [
+          "carbon",
+          "emission",
+          "climate",
+          "supply chain",
+          "ghg",
+          "renewable energy",
+          "carbon reduction",
+          "renewable",
+          "material",
+          "target",
+          "climate change",
+          "net",
+          "metric",
+          "impact",
+          "right"
+        ],
+        "2024": [
+          "supplier",
+          "carbon",
+          "emission",
+          "climate",
+          "supply",
+          "chain",
+          "supply chain",
+          "carbon reduction",
+          "impact",
+          "scope",
+          "renewable",
+          "ghg",
+          "renewable energy",
+          "metric",
+          "material"
+        ]
+      },
+      "persistent": [
+        "carbon",
+        "carbon reduction",
+        "climate",
+        "ghg",
+        "renewable",
+        "renewable energy"
+      ],
+      "new": [
+        "chain",
+        "emission",
+        "impact",
+        "material",
+        "metric",
+        "net",
+        "right",
+        "supplier",
+        "supply",
+        "supply chain",
+        "target"
+      ],
+      "dropped": [
+        "carbon credit",
+        "change",
+        "climate change",
+        "credit",
+        "ghg emission",
+        "gwh",
+        "save",
+        "water"
+      ]
+    },
+    "SDG17_partnership": {
+      "sdg": "SDG17_partnership",
+      "top_terms": {
+        "2022": [
+          "design",
+          "assurance",
+          "issue",
+          "materiality",
+          "stakeholder",
+          "standard",
+          "gri",
+          "association",
+          "disclosure",
+          "datum",
+          "dnv",
+          "reporting",
+          "vice",
+          "serve",
+          "injury"
+        ],
+        "2023": [
+          "tax",
+          "security",
+          "supply chain",
+          "risk management",
+          "committee",
+          "design",
+          "material",
+          "audit",
+          "conduct",
+          "impact",
+          "issue",
+          "organization",
+          "assessment",
+          "stakeholder",
+          "human"
+        ],
+        "2024": [
+          "supplier",
+          "design",
+          "security",
+          "tax",
+          "chain",
+          "supply",
+          "standard",
+          "material",
+          "risk management",
+          "director",
+          "committee",
+          "board",
+          "supply chain",
+          "organization",
+          "impact"
+        ]
+      },
+      "persistent": [
+        "design"
+      ],
+      "new": [
+        "assessment",
+        "audit",
+        "board",
+        "chain",
+        "committee",
+        "conduct",
+        "director",
+        "human",
+        "impact",
+        "material",
+        "organization",
+        "risk management",
+        "security",
+        "supplier",
+        "supply",
+        "supply chain",
+        "tax"
+      ],
+      "dropped": [
+        "association",
+        "assurance",
+        "datum",
+        "disclosure",
+        "dnv",
+        "gri",
+        "injury",
+        "issue",
+        "materiality",
+        "reporting",
+        "serve",
+        "stakeholder",
+        "vice"
+      ]
+    },
+    "SDG3_health": {
+      "sdg": "SDG3_health",
+      "top_terms": {
+        "2022": [
+          "health",
+          "occupational",
+          "injury",
+          "contractor",
+          "disease",
+          "safety health",
+          "disable",
+          "disable injury",
+          "chemical",
+          "construction",
+          "incident",
+          "alarm",
+          "health check",
+          "prevention",
+          "level"
+        ],
+        "2023": [
+          "health",
+          "safety",
+          "injury",
+          "safety health",
+          "occupational",
+          "contractor",
+          "disease",
+          "disable",
+          "impact",
+          "chemical",
+          "construction",
+          "disable injury",
+          "workplace",
+          "people",
+          "collision"
+        ],
+        "2024": [
+          "health",
+          "safety",
+          "injury",
+          "contractor",
+          "occupational",
+          "work",
+          "supplier",
+          "impact",
+          "safety health",
+          "chemical",
+          "construction",
+          "care",
+          "site",
+          "workplace",
+          "hour"
+        ]
+      },
+      "persistent": [
+        "chemical",
+        "construction",
+        "contractor",
+        "health",
+        "injury",
+        "occupational",
+        "safety health"
+      ],
+      "new": [
+        "care",
+        "collision",
+        "hour",
+        "impact",
+        "people",
+        "safety",
+        "site",
+        "supplier",
+        "work",
+        "workplace"
+      ],
+      "dropped": [
+        "alarm",
+        "disable",
+        "disable injury",
+        "disease",
+        "health check",
+        "incident",
+        "level",
+        "prevention"
+      ]
+    },
+    "SDG4_education": {
+      "sdg": "SDG4_education",
+      "top_terms": {
+        "2022": [
+          "student",
+          "university",
+          "school",
+          "learn",
+          "course",
+          "learning",
+          "high school",
+          "vocational",
+          "design",
+          "patent",
+          "national",
+          "camp",
+          "scholarship",
+          "rural",
+          "project"
+        ],
+        "2023": [
+          "student",
+          "university",
+          "learn",
+          "school",
+          "training",
+          "foundation",
+          "high school",
+          "learning",
+          "course",
+          "safety",
+          "vocational",
+          "trainer",
+          "teacher",
+          "injury",
+          "national"
+        ],
+        "2024": [
+          "student",
+          "university",
+          "foundation",
+          "school",
+          "support",
+          "learn",
+          "volunteer",
+          "national",
+          "training",
+          "camp",
+          "learning",
+          "scientific",
+          "science",
+          "project",
+          "safety"
+        ]
+      },
+      "persistent": [
+        "learn",
+        "learning",
+        "national",
+        "school",
+        "student",
+        "university"
+      ],
+      "new": [
+        "foundation",
+        "injury",
+        "safety",
+        "science",
+        "scientific",
+        "support",
+        "teacher",
+        "trainer",
+        "training",
+        "volunteer"
+      ],
+      "dropped": [
+        "course",
+        "design",
+        "high school",
+        "patent",
+        "rural",
+        "scholarship",
+        "vocational"
+      ]
+    },
+    "SDG6_water": {
+      "sdg": "SDG6_water",
+      "top_terms": {
+        "2022": [
+          "water",
+          "water consumption",
+          "reclaim",
+          "wastewater",
+          "consumption",
+          "waste",
+          "reclaim water",
+          "recycling",
+          "plant",
+          "treatment",
+          "reclamation",
+          "water plant",
+          "recycle",
+          "increase",
+          "wafer"
+        ],
+        "2023": [
+          "wastewater",
+          "reclaim",
+          "impact",
+          "water resource",
+          "plant",
+          "treatment",
+          "recycling",
+          "waste",
+          "acid",
+          "pollution",
+          "water consumption",
+          "reclaim water",
+          "emission",
+          "gas",
+          "water supply"
+        ],
+        "2024": [
+          "wastewater",
+          "water resource",
+          "pollution",
+          "treatment",
+          "supplier",
+          "reclaim",
+          "water consumption",
+          "consumption",
+          "wafer",
+          "concentration",
+          "reclaim water",
+          "supply",
+          "carbon",
+          "wastewater treatment",
+          "reduce"
+        ]
+      },
+      "persistent": [
+        "reclaim",
+        "reclaim water",
+        "treatment",
+        "wastewater",
+        "water consumption"
+      ],
+      "new": [
+        "acid",
+        "carbon",
+        "concentration",
+        "emission",
+        "gas",
+        "impact",
+        "pollution",
+        "reduce",
+        "supplier",
+        "supply",
+        "wastewater treatment",
+        "water resource",
+        "water supply"
+      ],
+      "dropped": [
+        "increase",
+        "plant",
+        "reclamation",
+        "recycle",
+        "recycling",
+        "waste",
+        "water",
+        "water plant"
+      ]
+    },
+    "SDG7_energy": {
+      "sdg": "SDG7_energy",
+      "top_terms": {
+        "2022": [
+          "renewable",
+          "renewable energy",
+          "save",
+          "gwh",
+          "electricity",
+          "energy efficiency",
+          "efficiency",
+          "carbon",
+          "consumption",
+          "solar",
+          "energy save",
+          "increase",
+          "energy consumption",
+          "ghg",
+          "school"
+        ],
+        "2023": [
+          "renewable",
+          "renewable energy",
+          "energy save",
+          "electricity",
+          "gwh",
+          "carbon",
+          "emission",
+          "solar",
+          "energy consumption",
+          "target",
+          "equivalent",
+          "serve",
+          "energy efficiency",
+          "use",
+          "industry association"
+        ],
+        "2024": [
+          "renewable",
+          "renewable energy",
+          "save",
+          "power",
+          "energy save",
+          "solar",
+          "efficiency",
+          "conservation",
+          "electricity",
+          "volunteer",
+          "consumption",
+          "carbon",
+          "association",
+          "serve",
+          "center"
+        ]
+      },
+      "persistent": [
+        "carbon",
+        "electricity",
+        "energy save",
+        "renewable",
+        "renewable energy",
+        "solar"
+      ],
+      "new": [
+        "association",
+        "center",
+        "conservation",
+        "emission",
+        "equivalent",
+        "industry association",
+        "power",
+        "serve",
+        "target",
+        "use",
+        "volunteer"
+      ],
+      "dropped": [
+        "energy consumption",
+        "energy efficiency",
+        "ghg",
+        "gwh",
+        "increase",
+        "school"
+      ]
+    },
+    "SDG8_labor": {
+      "sdg": "SDG8_labor",
+      "top_terms": {
+        "2022": [
+          "right",
+          "human right",
+          "harassment",
+          "vocational",
+          "leave",
+          "meeting",
+          "discrimination",
+          "conduct",
+          "issue",
+          "labor",
+          "vocational high",
+          "channel",
+          "employment",
+          "worker",
+          "officer"
+        ],
+        "2023": [
+          "impact",
+          "human",
+          "right",
+          "human right",
+          "compensation",
+          "sexual",
+          "harassment",
+          "conduct",
+          "sexual harassment",
+          "labor",
+          "survey",
+          "health",
+          "issue",
+          "supply chain",
+          "workplace"
+        ],
+        "2024": [
+          "human",
+          "right",
+          "supplier",
+          "human right",
+          "supply",
+          "chain",
+          "supply chain",
+          "labor",
+          "work",
+          "workplace",
+          "conduct",
+          "payment",
+          "health",
+          "impact",
+          "governance"
+        ]
+      },
+      "persistent": [
+        "conduct",
+        "human right",
+        "labor",
+        "right"
+      ],
+      "new": [
+        "chain",
+        "compensation",
+        "governance",
+        "health",
+        "human",
+        "impact",
+        "payment",
+        "sexual",
+        "sexual harassment",
+        "supplier",
+        "supply",
+        "supply chain",
+        "survey",
+        "work",
+        "workplace"
+      ],
+      "dropped": [
+        "channel",
+        "discrimination",
+        "employment",
+        "harassment",
+        "issue",
+        "leave",
+        "meeting",
+        "officer",
+        "vocational",
+        "vocational high",
+        "worker"
+      ]
+    },
+    "SDG9_innovation": {
+      "sdg": "SDG9_innovation",
+      "top_terms": {
+        "2022": [
+          "trade_secret",
+          "registration",
+          "patent",
+          "trade",
+          "trade_secret registration",
+          "register",
+          "collaboration",
+          "award",
+          "protection",
+          "project",
+          "industry academia",
+          "patent application",
+          "green trade_secret",
+          "academia",
+          "technology leadership"
+        ],
+        "2023": [
+          "patent",
+          "trade_secret",
+          "registration",
+          "trade",
+          "trade_secret registration",
+          "design",
+          "oip",
+          "patent application",
+          "application",
+          "collaboration",
+          "target",
+          "register",
+          "leadership",
+          "innovative",
+          "green trade_secret"
+        ],
+        "2024": [
+          "patent",
+          "trade_secret",
+          "registration",
+          "technology leadership",
+          "patent application",
+          "leadership",
+          "intellectual",
+          "maintain technology",
+          "property",
+          "revenue",
+          "student",
+          "intellectual property",
+          "campus",
+          "revenue expense",
+          "management policy"
+        ]
+      },
+      "persistent": [
+        "patent",
+        "patent application",
+        "registration",
+        "trade_secret"
+      ],
+      "new": [
+        "application",
+        "campus",
+        "design",
+        "innovative",
+        "intellectual",
+        "intellectual property",
+        "leadership",
+        "maintain technology",
+        "management policy",
+        "oip",
+        "property",
+        "revenue",
+        "revenue expense",
+        "student",
+        "target"
+      ],
+      "dropped": [
+        "academia",
+        "award",
+        "collaboration",
+        "green trade_secret",
+        "industry academia",
+        "project",
+        "protection",
+        "register",
+        "trade",
+        "trade_secret registration"
+      ]
+    }
+  },
+  "centroid_shift": {
+    "SDG12_consumption": {
+      "euclid": {
+        "d_22_23": 0.2338,
+        "d_23_24": 0.2498,
+        "d_22_24_direct": 0.1506,
+        "path_total": 0.4835
+      },
+      "cosine": {
+        "d_22_23": 0.0381,
+        "d_23_24": 0.0435,
+        "d_22_24_direct": 0.017
+      }
+    },
+    "SDG13_climate": {
+      "euclid": {
+        "d_22_23": 0.2572,
+        "d_23_24": 0.2078,
+        "d_22_24_direct": 0.1294,
+        "path_total": 0.4649
+      },
+      "cosine": {
+        "d_22_23": 0.0428,
+        "d_23_24": 0.0279,
+        "d_22_24_direct": 0.0114
+      }
+    },
+    "SDG17_partnership": {
+      "euclid": {
+        "d_22_23": 0.2136,
+        "d_23_24": 0.2439,
+        "d_22_24_direct": 0.1525,
+        "path_total": 0.4575
+      },
+      "cosine": {
+        "d_22_23": 0.0324,
+        "d_23_24": 0.04,
+        "d_22_24_direct": 0.0181
+      }
+    },
+    "SDG3_health": {
+      "euclid": {
+        "d_22_23": 0.2903,
+        "d_23_24": 0.2494,
+        "d_22_24_direct": 0.1308,
+        "path_total": 0.5398
+      },
+      "cosine": {
+        "d_22_23": 0.0598,
+        "d_23_24": 0.0435,
+        "d_22_24_direct": 0.0135
+      }
+    },
+    "SDG4_education": {
+      "euclid": {
+        "d_22_23": 0.2265,
+        "d_23_24": 0.2379,
+        "d_22_24_direct": 0.1674,
+        "path_total": 0.4644
+      },
+      "cosine": {
+        "d_22_23": 0.0371,
+        "d_23_24": 0.0408,
+        "d_22_24_direct": 0.0248
+      }
+    },
+    "SDG6_water": {
+      "euclid": {
+        "d_22_23": 0.2512,
+        "d_23_24": 0.2356,
+        "d_22_24_direct": 0.1505,
+        "path_total": 0.4867
+      },
+      "cosine": {
+        "d_22_23": 0.0422,
+        "d_23_24": 0.0369,
+        "d_22_24_direct": 0.0165
+      }
+    },
+    "SDG7_energy": {
+      "euclid": {
+        "d_22_23": 0.2562,
+        "d_23_24": 0.2607,
+        "d_22_24_direct": 0.2156,
+        "path_total": 0.517
+      },
+      "cosine": {
+        "d_22_23": 0.0426,
+        "d_23_24": 0.0435,
+        "d_22_24_direct": 0.0352
+      }
+    },
+    "SDG8_labor": {
+      "euclid": {
+        "d_22_23": 0.2625,
+        "d_23_24": 0.2996,
+        "d_22_24_direct": 0.2213,
+        "path_total": 0.562
+      },
+      "cosine": {
+        "d_22_23": 0.0456,
+        "d_23_24": 0.0594,
+        "d_22_24_direct": 0.0338
+      }
+    },
+    "SDG9_innovation": {
+      "euclid": {
+        "d_22_23": 0.287,
+        "d_23_24": 0.4289,
+        "d_22_24_direct": 0.4012,
+        "path_total": 0.7159
+      },
+      "cosine": {
+        "d_22_23": 0.0524,
+        "d_23_24": 0.1192,
+        "d_22_24_direct": 0.1117
+      }
+    }
+  }
+}

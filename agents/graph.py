@@ -5,7 +5,7 @@ from typing import Any, Callable
 
 from .classify import classification_agent
 from .keywords import keyword_agent
-from .llm import answer_with_optional_llm, summarize_with_optional_llm
+from .llm import answer_with_optional_llm, summarize_cross_year, summarize_with_optional_llm
 from .preprocess import preprocess_agent
 from .retrieve import retrieval_agent
 from .state import ESGState
@@ -14,6 +14,23 @@ from .visualize import visualization_agent
 
 def summary_agent(state: ESGState) -> ESGState:
     mode = str(state.get("mode", "executive"))
+    # mode "cross_year:<SDG>" -> grounded three-year narrative for that SDG.
+    if mode.startswith("cross_year:"):
+        sdg = mode.split(":", 1)[1].strip()
+        try:
+            from cross_year_analysis import get_cross_year_metrics
+
+            metrics = get_cross_year_metrics(sdg)
+            summary = summarize_cross_year(
+                metrics,
+                mode="executive",
+                model=str(state.get("model", "gpt-4.1-mini")),
+                api_key=state.get("api_key", ""),
+            )
+            return {"summary": summary}
+        except Exception as exc:
+            errors = list(state.get("errors", [])) + [f"cross_year summary: {exc}"]
+            return {"summary": summarize_with_optional_llm(state, mode="executive"), "errors": errors}
     summary = summarize_with_optional_llm(state, mode=mode)
     return {"summary": summary}
 
@@ -90,6 +107,7 @@ def run_analysis(
         "api_key": api_key,
         "model": model or os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
         "chart_data": {"top_n": top_n},
+        "qa_scope": "cross_year",
         "errors": [],
     }
     try:
@@ -101,7 +119,15 @@ def run_analysis(
         return state
 
 
-def answer_question(state: ESGState, question: str) -> ESGState:
+def answer_question(
+    state: ESGState,
+    question: str,
+    scope: str = "cross_year",
+    years: list[str] | None = None,
+) -> ESGState:
     qa_state = dict(state)
     qa_state["user_question"] = question
+    qa_state["qa_scope"] = scope
+    if years:
+        qa_state["qa_years"] = [str(y) for y in years]
     return _run_sequential(qa_state, [retrieval_agent, qa_agent])

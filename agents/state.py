@@ -22,3 +22,6 @@ class ESGState(TypedDict, total=False):
     api_key: str
     model: str
     errors: list[str]
+    # Cross-year Q&A: "cross_year" pools 2022/2023/2024; otherwise a single year.
+    qa_scope: str
+    qa_years: list[str]

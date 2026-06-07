@@ -284,6 +284,58 @@ def get_similarity_neighbors(year: str, group_type: str, group_name: str, top_n:
     }
 
 
+def get_cross_year_trend(group_name: str) -> dict[str, Any]:
+    """Cross-year (2022/2023/2024) trend for one SDG, reusing cross_year_analysis.
+
+    Input: an SDG topic name (alias-tolerant, e.g. 'labor' -> 'SDG8_labor').
+    Output: standard tool dict whose `rows` is a three-year keyword/coverage table and
+    whose `summary` highlights coverage shift, persistent/new/dropped terms, and the
+    semantic centroid path length. Does NOT recompute — reads the cached snapshot.
+    """
+    group_name = normalize_group_name("sdg", group_name)
+    try:
+        from cross_year_analysis import get_cross_year_metrics
+    except Exception as exc:  # pragma: no cover - import guard
+        raise AgentToolError(f"cross_year_analysis unavailable: {exc}")
+    try:
+        metrics = get_cross_year_metrics(group_name)
+    except ValueError as exc:
+        raise AgentToolError(str(exc))
+
+    years = metrics["years"]
+    cov = metrics.get("coverage") or {}
+    count = cov.get("count", {})
+    share = cov.get("share_pct", {})
+    ks = metrics.get("keyword_shift") or {}
+    top = ks.get("top_terms", {})
+    n = max((len(top.get(y, [])) for y in years), default=0)
+    rows = pd.DataFrame(
+        {
+            "rank": list(range(1, n + 1)),
+            **{y: (top.get(y, []) + [""] * n)[:n] for y in years},
+        }
+    )
+
+    cs = (metrics.get("centroid_shift") or {}).get("euclid") or {}
+    cov_txt = " -> ".join(f"{y}: {count.get(y, 0)} chunks ({share.get(y, 0)}%)" for y in years)
+    summary = (
+        f"Coverage {cov_txt}; share delta (22->24) {cov.get('delta_share_pp_22_24', 0):+.1f}pp. "
+        f"Persistent: {', '.join(ks.get('persistent', [])[:6]) or '-'}. "
+        f"New: {', '.join(ks.get('new', [])[:6]) or '-'}. "
+        f"Dropped: {', '.join(ks.get('dropped', [])[:6]) or '-'}. "
+        f"Centroid path total {cs.get('path_total', 'n/a')}."
+    )
+    return {
+        "tool": "Cross-Year Trend Tool",
+        "year": "2022-2024",
+        "group_type": "sdg",
+        "group_name": group_name,
+        "rows": rows,
+        "summary": summary,
+        "metrics": metrics,
+    }
+
+
 def get_bert_assets() -> dict[str, Any]:
     rows = pd.DataFrame(
         [
