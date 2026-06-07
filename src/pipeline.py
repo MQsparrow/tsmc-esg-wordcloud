@@ -387,7 +387,7 @@ def is_noisy_fragment(text: str) -> bool:
             return True
         if lower == "(continued from the previous page)":
             return True
-        if s in {"●", "â—"}:
+        if s in {"●"}:
             return True
 
     if len(words) <= 30:
